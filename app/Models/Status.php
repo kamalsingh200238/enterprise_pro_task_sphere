@@ -20,4 +20,14 @@ class Status extends Model
         'updated_at' => 'datetime',
         'color' => Color::class
     ];
+
+    public function projects()
+    {
+        return $this->hasMany(Project::class);
+    }
+
+    public function tasks()
+    {
+        return $this->hasMany(Task::class);
+    }
 }
