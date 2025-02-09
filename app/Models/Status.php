@@ -11,10 +11,12 @@ class Status extends Model
     use HasFactory;
 
     protected $table = "statuses";
+
     protected $fillable = [
         "name",
         "color"
     ];
+
     protected $casts = [
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
