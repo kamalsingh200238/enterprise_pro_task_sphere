@@ -1,5 +1,5 @@
 <?php
-
+use App\Color;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -12,8 +12,8 @@ return new class extends Migration {
     {
         Schema::create('priorities', function (Blueprint $table) {
             $table->id();
-            $table->string("name");
-            $table->enum('color', ['red', 'yellow', 'green', 'blue', 'gray', 'purple'])->default('gray');
+            $table->string("name")->unique();
+            $table->enum('color', array_column(Color::cases(), 'value'))->default(Color::GRAY->value);
             $table->timestampsTz();
         });
     }
