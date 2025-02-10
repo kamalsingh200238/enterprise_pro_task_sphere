@@ -11,7 +11,7 @@ class Task extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        "parent_id",
+        'parent_id',
         'name',
         'description',
         'start_date',
@@ -21,7 +21,7 @@ class Task extends Model
         'is_private',
         'created_by',
         'updated_by',
-        'supervisor_id'
+        'supervisor_id',
     ];
 
     protected $casts = [
@@ -29,7 +29,7 @@ class Task extends Model
         'due_date' => 'datetime',
         'is_private' => 'boolean',
         'created_at' => 'datetime',
-        'updated_at' => 'datetime'
+        'updated_at' => 'datetime',
     ];
 
     public function parent()

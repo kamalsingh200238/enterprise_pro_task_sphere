@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 use App\Color;
 use App\Models\Priority;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class PrioritySeeder extends Seeder
@@ -35,7 +34,7 @@ class PrioritySeeder extends Seeder
 
         foreach ($priorities as $priority) {
             Priority::firstOrCreate(
-                ["name" => $priority['name']],
+                ['name' => $priority['name']],
                 $priority
             );
         }

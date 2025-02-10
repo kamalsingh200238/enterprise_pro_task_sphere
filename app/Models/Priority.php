@@ -2,25 +2,25 @@
 
 namespace App\Models;
 
+use App\Color;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Color;
 
 class Priority extends Model
 {
     use HasFactory;
 
-    protected $table = "priorities";
+    protected $table = 'priorities';
 
     protected $fillable = [
-        "name",
-        "color"
+        'name',
+        'color',
     ];
 
     protected $casts = [
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
-        'color' => Color::class
+        'color' => Color::class,
     ];
 
     public function projects()

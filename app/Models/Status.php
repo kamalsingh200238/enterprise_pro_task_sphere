@@ -2,25 +2,25 @@
 
 namespace App\Models;
 
+use App\Color;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Color;
 
 class Status extends Model
 {
     use HasFactory;
 
-    protected $table = "statuses";
+    protected $table = 'statuses';
 
     protected $fillable = [
-        "name",
-        "color"
+        'name',
+        'color',
     ];
 
     protected $casts = [
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
-        'color' => Color::class
+        'color' => Color::class,
     ];
 
     public function projects()

@@ -2,10 +2,9 @@
 
 namespace Database\Seeders;
 
-use App\Models\Status;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use Illuminate\Database\Seeder;
 use App\Color;
+use App\Models\Status;
+use Illuminate\Database\Seeder;
 
 class StatusSeeder extends Seeder
 {
@@ -39,7 +38,7 @@ class StatusSeeder extends Seeder
 
         foreach ($statuses as $status) {
             Status::firstOrCreate(
-                ["name" => $status['name']],
+                ['name' => $status['name']],
                 $status
             );
         }

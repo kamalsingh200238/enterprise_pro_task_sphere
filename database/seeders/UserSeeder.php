@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\User;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class UserSeeder extends Seeder
@@ -32,7 +31,7 @@ class UserSeeder extends Seeder
         foreach ($supervisors as $index => $name) {
             User::factory()->supervisor()->create([
                 'name' => $name,
-                'email' => strtolower(str_replace(' ', '.', $name)) . '@example.com',
+                'email' => strtolower(str_replace(' ', '.', $name)).'@example.com',
             ]);
         }
 
