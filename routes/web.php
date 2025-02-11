@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ProjectController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -20,9 +21,7 @@ Route::middleware('auth')->group(function () {
         return Inertia::render('Dashboard');
     })->name('dashboard');
 
-    Route::get('/projects/new', function () {
-        return Inertia::render('Project/CreateProject');
-    });
+    Route::get('/projects/new', [ProjectController::class, 'create']);
 });
 
 
