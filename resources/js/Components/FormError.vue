@@ -8,7 +8,7 @@ const props = defineProps({
 </script>
 
 <template>
-    <div v-if="props.err" :class="cn('mt-1 text-sm text-red-500', props.class)">
+    <div v-if="props.err" :class="cn('mt-1 text-xs text-red-500', props.class)">
         {{ props.err }}
     </div>
 </template>
