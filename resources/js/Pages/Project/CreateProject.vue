@@ -7,13 +7,32 @@ import { Label } from '@/Components/ui/label';
 import { Textarea } from '@/Components/ui/textarea';
 import { useForm } from '@inertiajs/vue3';
 
-const props = defineProps({
-    statuses: Array,
-    priorities: Array,
-    users: Array,
-});
+import StatusSelect from '@/Components/StatusSelect.vue';
 
-const form = useForm({
+import PrioritySelect from '@/Components/PrioritySelect.vue';
+import { Priority, Status, User } from '@/types';
+import UserSelect from '@/Components/UserSelect.vue';
+
+interface Props {
+    statuses: Status[];
+    priorities: Priority[];
+    users: User[];
+}
+
+const props = defineProps<Props>();
+
+const form = useForm<{
+    name: string;
+    description: string;
+    start_date: string;
+    due_date: string;
+    status_id: string;
+    priority_id: string;
+    is_private: boolean;
+    supervisor_id?: string;
+    assignees: number[];
+    viewers: number[];
+}>({
     name: '',
     description: '',
     start_date: '',
@@ -60,7 +79,27 @@ const submit = () => {
                     <FormError :err="form.errors.due_date" />
                 </div>
             </div>
-            <div></div>
+            <div>
+                <Label for="status">Status</Label>
+                <StatusSelect
+                    id="status"
+                    v-model="form.status_id"
+                    :statuses="props.statuses"
+                ></StatusSelect>
+                <FormError :err="form.errors.status_id" />
+            </div>
+            <div>
+                <Label for="priority">Priority</Label>
+                <PrioritySelect
+                    id="priority"
+                    v-model="form.priority_id"
+                    :priorities="props.priorities"
+                ></PrioritySelect>
+                <FormError :err="form.errors.priority_id" />
+            </div>
+            <div>
+                <UserSelect :users="props.users" />
+            </div>
             <Button type="submit" :disabled="form.processing">
                 Create Project
             </Button>
