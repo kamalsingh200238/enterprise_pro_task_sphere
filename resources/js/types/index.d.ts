@@ -2,7 +2,6 @@ export interface User {
     id: number;
     name: string;
     email: string;
-    email_verified_at?: string;
 }
 
 export type PageProps<
@@ -12,3 +11,19 @@ export type PageProps<
         user: User;
     };
 };
+
+export interface Status {
+    id: number;
+    name: 'Backlog' | 'In Progress' | 'On Hold' | 'In Review' | 'Done';
+    color: 'gray' | 'blue' | 'green' | 'yellow' | 'red';
+    created_at: string;
+    updated_at: string;
+}
+
+export interface Priority {
+    id: number;
+    name: 'Low' | 'Medium' | 'High' | 'Urgent';
+    color: 'gray' | 'blue' | 'green' | 'yellow' | 'red';
+    created_at: string;
+    updated_at: string;
+}
