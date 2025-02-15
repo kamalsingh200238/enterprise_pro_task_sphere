@@ -40,14 +40,14 @@ class ProjectController extends Controller
             'description' => ['nullable', 'string'],
             'start_date' => ['required', 'date'],
             'due_date' => ['required', 'date', 'after_or_equal:start_date'],
-            // 'status_id' => ['required', 'exists:statuses,id'],
-            // 'priority_id' => ['required', 'exists:priorities,id'],
-            // 'is_private' => ['boolean'],
-            // 'supervisor_id' => ['required', 'exists:users,id'],
-            // 'assignees' => ['array'],
-            // 'assignees.*' => ['exists:users,id'],
-            // 'viewers' => ['array'],
-            // 'viewers.*' => ['exists:users,id'],
+            'status_id' => ['required', 'exists:statuses,id'],
+            'priority_id' => ['required', 'exists:priorities,id'],
+            'supervisor_id' => ['required', 'exists:users,id'],
+            'assignees' => ['required', 'array', 'min:1'],
+            'assignees.*' => ['exists:users,id'],
+            'is_private' => ['boolean'],
+            'viewers' => ['array', 'prohibited_unless:is_private,true'],
+            'viewers.*' => ['exists:users,id'],
         ]);
     }
 
