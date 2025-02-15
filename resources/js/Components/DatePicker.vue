@@ -30,7 +30,7 @@ const formatDate = (date: Date) => format(date, 'MMM d, yyyy');
                 variant="outline"
                 :class="
                     cn(
-                        'w-72 justify-start',
+                        'justify-start',
                         !date && 'text-muted-foreground',
                     )
                 "
