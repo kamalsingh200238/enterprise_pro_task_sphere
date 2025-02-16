@@ -23,6 +23,7 @@ import { Avatar, AvatarFallback } from './ui/avatar';
 
 interface Props {
     users: User[];
+    disabled: boolean;
     buttonClass?: string;
 }
 
@@ -83,7 +84,10 @@ const getInitials = (name: string) => {
         </PopoverTrigger>
 
         <PopoverContent class="w-96 p-0" align="start">
-            <Command v-model:search-term="searchTerm">
+            <Command
+                v-model:search-term="searchTerm"
+                :disabled="props.disabled"
+            >
                 <CommandInput
                     v-model="searchTerm"
                     placeholder="Search users..."
@@ -96,6 +100,7 @@ const getInitials = (name: string) => {
                             :key="user.id"
                             :value="user"
                             @select="() => toggleUser(user.id)"
+                            :disabled="props.disabled"
                         >
                             <div class="flex flex-1 items-center gap-3">
                                 <div

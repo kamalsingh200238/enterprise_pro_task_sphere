@@ -22,6 +22,7 @@ import { Avatar, AvatarFallback } from './ui/avatar';
 
 interface Props {
     users: User[];
+    disabled: boolean;
     buttonClass?: string;
 }
 
@@ -82,7 +83,10 @@ const selectedUserData = computed(() =>
         </PopoverTrigger>
 
         <PopoverContent class="w-96 p-0" align="start">
-            <Command v-model:search-term="searchTerm">
+            <Command
+                v-model:search-term="searchTerm"
+                :disabled="props.disabled"
+            >
                 <CommandInput
                     v-model="searchTerm"
                     placeholder="Search users..."
@@ -95,6 +99,7 @@ const selectedUserData = computed(() =>
                             :key="user.id"
                             :value="user"
                             @select="() => selectUser(user.id)"
+                            :disabled="props.disabled"
                         >
                             <div class="flex flex-1 items-center gap-3">
                                 <div

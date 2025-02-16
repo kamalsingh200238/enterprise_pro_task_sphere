@@ -13,7 +13,6 @@ import { Textarea } from '@/Components/ui/textarea';
 import ViewerSelector from '@/Components/ViewerSelector.vue';
 import { Priority, Status, User } from '@/types';
 import { Head, useForm } from '@inertiajs/vue3';
-import { watch } from 'vue';
 
 interface Props {
     statuses: Status[];
@@ -107,21 +106,23 @@ const submit = () => {
                 <FormError :err="form.errors.priority_id" />
             </div>
             <div>
+                <SupervisorSelect :disabled="false" :users="users" v-model="form.supervisor_id" />
+                <FormError :err="form.errors.supervisor_id" />
+            </div>
+            <div>
                 <AssigneeSelector
                     :users="props.users"
                     v-model="form.assignees"
+                    :disabled="false"
                 />
                 <FormError :err="form.errors.assignees" />
-            </div>
-            <div>
-                <SupervisorSelect :users="users" v-model="form.supervisor_id" />
-                <FormError :err="form.errors.supervisor_id" />
             </div>
             <div>
                 <ViewerSelector
                     :users="users"
                     v-model="form.viewers"
                     :assignee-ids="form.assignees"
+                    :disabled="true"
                 />
                 <FormError :err="form.errors.supervisor_id" />
             </div>
