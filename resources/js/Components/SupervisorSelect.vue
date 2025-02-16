@@ -72,12 +72,16 @@ const selectedUserData = computed(() =>
 <template>
     <Popover>
         <PopoverTrigger as-child>
-            <Button variant="outline" :class="buttonClass">
-                <template v-if="selectedUserData">
-                    {{ selectedUserData.name }}
-                </template>
-
-                <template v-else> Select user </template>
+            <Button
+                variant="outline"
+                :class="cn('justify-between', props.buttonClass)"
+            >
+                <span>
+                    <template v-if="selectedUserData">
+                        {{ selectedUserData.name }}
+                    </template>
+                    <template v-else> Select user </template>
+                </span>
                 <ChevronsUpDown class="ml-2 h-4 w-4 shrink-0 opacity-50" />
             </Button>
         </PopoverTrigger>
@@ -89,10 +93,10 @@ const selectedUserData = computed(() =>
             >
                 <CommandInput
                     v-model="searchTerm"
-                    placeholder="Search users..."
+                    placeholder="Search supervisors..."
                 />
                 <CommandList>
-                    <CommandEmpty>No users found.</CommandEmpty>
+                    <CommandEmpty>No supervisors found.</CommandEmpty>
                     <CommandGroup>
                         <CommandItem
                             v-for="user in filteredPeople"
@@ -122,9 +126,9 @@ const selectedUserData = computed(() =>
                                             : 'bg-primary/5'
                                     "
                                 >
-                                    <AvatarFallback>{{
-                                        getInitials(user.name)
-                                    }}</AvatarFallback>
+                                    <AvatarFallback>
+                                        {{ getInitials(user.name) }}
+                                    </AvatarFallback>
                                 </Avatar>
 
                                 <div class="flex min-w-0 flex-1 flex-col">

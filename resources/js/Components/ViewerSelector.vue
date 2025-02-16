@@ -23,7 +23,7 @@ import { Avatar, AvatarFallback } from './ui/avatar';
 
 interface Props {
     users: User[];
-    disabled: boolean
+    disabled: boolean;
     assigneeIds: number[];
     buttonClass?: string;
 }
@@ -87,20 +87,29 @@ const getInitials = (name: string) => {
 <template>
     <Popover>
         <PopoverTrigger as-child>
-            <Button variant="outline" :class="buttonClass">
-                Add viewers
-                <ChevronsUpDown class="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                <template v-if="selectedViewers.length > 0">
-                    <Separator orientation="vertical" class="mx-2" />
-                    <Badge variant="secondary">
-                        {{ selectedViewers.length }} selected
-                    </Badge>
-                </template>
+            <Button
+                variant="outline"
+                :class="cn('justify-between', props.buttonClass)"
+            >
+                <span>Select Viewers</span>
+                <div class="inline-flex items-center gap-2">
+                    <ChevronsUpDown class="h-4 w-4 shrink-0 opacity-50" />
+
+                    <template v-if="selectedViewers.length > 0">
+                        <Separator orientation="vertical" class="h-4" />
+                        <Badge variant="secondary">
+                            {{ selectedViewers.length }} selected
+                        </Badge>
+                    </template>
+                </div>
             </Button>
         </PopoverTrigger>
 
         <PopoverContent class="w-96 p-0" align="start">
-            <Command v-model:search-term="searchTerm" :disabled="props.disabled">
+            <Command
+                v-model:search-term="searchTerm"
+                :disabled="props.disabled"
+            >
                 <CommandInput
                     v-model="searchTerm"
                     placeholder="Search users..."

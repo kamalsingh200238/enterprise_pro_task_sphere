@@ -71,15 +71,20 @@ const getInitials = (name: string) => {
 <template>
     <Popover>
         <PopoverTrigger as-child>
-            <Button variant="outline" :class="buttonClass">
-                Select users
-                <ChevronsUpDown class="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                <template v-if="selectedUsers.length > 0">
-                    <Separator orientation="vertical" />
-                    <Badge variant="secondary">
-                        {{ selectedUsers.length }} selected
-                    </Badge>
-                </template>
+            <Button
+                variant="outline"
+                :class="cn('justify-between', props.buttonClass)"
+            >
+                <span>Select Assignees</span>
+                <div class="inline-flex items-center gap-2">
+                    <ChevronsUpDown class="h-4 w-4 shrink-0 opacity-50" />
+                    <template v-if="selectedUsers.length > 0">
+                        <Separator orientation="vertical" class="h-4" />
+                        <Badge variant="secondary">
+                            {{ selectedUsers.length }} selected
+                        </Badge>
+                    </template>
+                </div>
             </Button>
         </PopoverTrigger>
 
