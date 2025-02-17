@@ -61,8 +61,8 @@ const submit = () => {
     <Head title="Create New Project" />
     <main class="mx-auto max-w-7xl p-8">
         <form @submit.prevent="submit">
-            <div class="grid grid-cols-3 gap-10">
-                <div class="col-span-2 space-y-5">
+            <div class="grid lg:grid-cols-3 gap-8">
+                <div class="col-span-2 space-y-6">
                     <div>
                         <Label for="name">Project Name </Label>
                         <Input id="name" type="text" v-model="form.name" />
@@ -70,11 +70,11 @@ const submit = () => {
                     </div>
                     <div>
                         <Label for="description">Description</Label>
-                        <Textarea id="description" v-model="form.description" />
+                        <Textarea id="description" v-model="form.description" rows="20"/>
                         <FormError :err="form.errors.description" />
                     </div>
                 </div>
-                <div class="space-y-5">
+                <div class="space-y-6">
                     <div>
                         <Label for="status">Status</Label>
                         <StatusSelect
