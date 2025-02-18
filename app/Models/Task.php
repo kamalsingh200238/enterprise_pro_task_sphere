@@ -11,7 +11,7 @@ class Task extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'parent_id',
+        'project_id',
         'name',
         'description',
         'start_date',
@@ -31,6 +31,16 @@ class Task extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::created(function ($project) {
+            $project->slug = 'TASK-' . $project->id;
+            $project->saveQuietly();
+        });
+    }
 
     public function parent()
     {
