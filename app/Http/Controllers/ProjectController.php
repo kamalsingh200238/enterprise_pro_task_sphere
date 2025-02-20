@@ -27,6 +27,7 @@ class ProjectController extends Controller
             'statuses' => Status::all(),
             'priorities' => Priority::all(),
             'users' => User::all(),
+            'supervisors' => User::getAllSupervisorAndAdmins(),
         ]);
     }
 
