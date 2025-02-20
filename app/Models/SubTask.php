@@ -37,7 +37,7 @@ class SubTask extends Model
         parent::boot();
 
         static::created(function ($project) {
-            $project->slug = 'STASK-' . $project->id;
+            $project->slug = 'STASK-'.$project->id;
             $project->saveQuietly();
         });
     }
