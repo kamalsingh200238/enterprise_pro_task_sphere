@@ -48,19 +48,43 @@ class User extends Authenticatable
         ];
     }
 
+    public function hasRole($role)
+    {
+        if (is_array($role)) {
+            return in_array($this->role, $role);
+        }
+
+        return $this->role === $role;
+    }
+
+    public static function getAllSupervisorAndAdmins()
+    {
+        return self::whereIn('role', [UserRole::SUPERVISOR, UserRole::ADMIN])->get();
+    }
+
+    public static function getAllSupervisors()
+    {
+        return self::where('role', UserRole::SUPERVISOR)->get();
+    }
+
+    public static function getAllAdmins()
+    {
+        return self::where('role', UserRole::ADMIN)->get();
+    }
+
     public function createdProjects()
     {
-        return $this->hasMany(Project::class, 'created_by');
+        return $this->hasOne(Project::class, 'created_by');
     }
 
     public function updatedProjects()
     {
-        return $this->hasMany(Project::class, 'updated_by');
+        return $this->hasOne(Project::class, 'updated_by');
     }
 
     public function supervisedProjects()
     {
-        return $this->belongsTo(Project::class, 'supervisor_id');
+        return $this->hasOne(Project::class, 'supervisor_id');
     }
 
     public function assignedProjects()
@@ -75,17 +99,17 @@ class User extends Authenticatable
 
     public function createdTasks()
     {
-        return $this->hasMany(Task::class, 'created_by');
+        return $this->hasOne(Task::class, 'created_by');
     }
 
     public function updatedTasks()
     {
-        return $this->hasMany(Task::class, 'updated_by');
+        return $this->hasOne(Task::class, 'updated_by');
     }
 
     public function supervisedTasks()
     {
-        return $this->belongsTo(Task::class, 'supervisor_id');
+        return $this->hasOne(Task::class, 'supervisor_id');
     }
 
     public function assignedTasks()
