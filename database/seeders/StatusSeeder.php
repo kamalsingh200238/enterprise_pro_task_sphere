@@ -13,6 +13,7 @@ class StatusSeeder extends Seeder
      */
     public function run(): void
     {
+        // Seeds the 'statuses' table with default status values.
         $statuses = [
             [
                 'name' => 'Backlog',
@@ -36,6 +37,7 @@ class StatusSeeder extends Seeder
             ],
         ];
 
+        // Insert statuses if they do not already exist
         foreach ($statuses as $status) {
             Status::firstOrCreate(
                 ['name' => $status['name']],

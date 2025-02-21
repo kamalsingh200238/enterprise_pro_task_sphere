@@ -12,6 +12,7 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        // Run all seeders
         $this->call(
             [
                 PrioritySeeder::class,

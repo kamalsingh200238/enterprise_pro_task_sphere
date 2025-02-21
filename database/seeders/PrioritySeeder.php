@@ -13,6 +13,7 @@ class PrioritySeeder extends Seeder
      */
     public function run(): void
     {
+        // Seeds the 'priorities' table with default priority levels.
         $priorities = [
             [
                 'name' => 'Low',
@@ -32,6 +33,7 @@ class PrioritySeeder extends Seeder
             ],
         ];
 
+        // Insert priorities if they do not already exist
         foreach ($priorities as $priority) {
             Priority::firstOrCreate(
                 ['name' => $priority['name']],

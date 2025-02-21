@@ -13,10 +13,18 @@ class UserSeeder extends Seeder
     public function run(): void
     {
         // TODO: remove all the code that generates dummy members
-        // create admin
-        User::factory()->admin()->create(
-            ['name' => 'Kamal Singh', 'email' => 'kamal.singh@example.com'],
-        );
+
+        // create admins
+        $admins = [
+            'Admin',
+            'Kamal Singh',
+        ];
+        foreach ($admins as $admin) {
+            User::factory()->admin()->create([
+                'name' => $admin,
+                'email' => strtolower(str_replace(' ', '.', $admin)) . '@example.com',
+            ]);
+        }
 
         // Create supervisors
         $supervisors = [
@@ -26,16 +34,25 @@ class UserSeeder extends Seeder
             'Maham Mahmood',
             'Sabrina Mei',
             'Suhaana Hussain',
+            'Supervisor'
         ];
-
-        foreach ($supervisors as $index => $name) {
+        foreach ($supervisors as $supervisor) {
             User::factory()->supervisor()->create([
-                'name' => $name,
-                'email' => strtolower(str_replace(' ', '.', $name)).'@example.com',
+                'name' => $supervisors,
+                'email' => strtolower(str_replace(' ', '.', $supervisor)) . '@example.com',
             ]);
         }
 
-        // create 10 dummy staff members
+        // create staff members
+        $staffs = [
+            'Staff'
+        ];
+        foreach ($staffs as $staff) {
+            User::factory()->create([
+                'name' => $staff,
+                'email' => strtolower(str_replace(' ', '.', $staff)) . '@example.com',
+            ]);
+        }
         User::factory(10)->create();
     }
 }

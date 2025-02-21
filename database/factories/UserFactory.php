@@ -32,6 +32,9 @@ class UserFactory extends Factory
         ];
     }
 
+    /**
+     * Change role to admin for model
+     */
     public function admin(): static
     {
         return $this->state(fn (array $attributes) => [
@@ -39,6 +42,9 @@ class UserFactory extends Factory
         ]);
     }
 
+    /**
+     * Change role to supervisor for model
+     */
     public function supervisor(): static
     {
         return $this->state(fn (array $attributes) => [
