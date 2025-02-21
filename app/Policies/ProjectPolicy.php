@@ -5,12 +5,9 @@ namespace App\Policies;
 use App\Models\Project;
 use App\Models\User;
 use App\UserRole;
-use Illuminate\Auth\Access\HandlesAuthorization;
 
 class ProjectPolicy
 {
-    use HandlesAuthorization;
-
     /**
      * Determine whether the user can view the model.
      */

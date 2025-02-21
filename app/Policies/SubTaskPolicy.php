@@ -5,12 +5,9 @@ namespace App\Policies;
 use App\Models\SubTask;
 use App\Models\User;
 use App\UserRole;
-use Illuminate\Auth\Access\HandlesAuthorization;
 
 class SubTaskPolicy
 {
-    use HandlesAuthorization;
-
     /**
      * Determine whether the user can view the model.
      */
