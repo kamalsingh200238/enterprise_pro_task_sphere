@@ -9,6 +9,7 @@ return new class extends Migration
 {
     /**
      * Run the migrations.
+     * Creates the 'statuses' table.
      */
     public function up(): void
     {
