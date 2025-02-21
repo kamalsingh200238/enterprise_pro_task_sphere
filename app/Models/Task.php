@@ -37,7 +37,7 @@ class Task extends Model
         parent::boot();
 
         static::created(function ($project) {
-            $project->slug = 'TASK-' . $project->id;
+            $project->slug = 'TASK-'.$project->id;
             $project->saveQuietly();
         });
     }

@@ -36,7 +36,7 @@ class Project extends Model
         parent::boot();
 
         static::created(function ($project) {
-            $project->slug = 'PROJECT-' . $project->id;
+            $project->slug = 'PROJECT-'.$project->id;
             $project->saveQuietly();
         });
     }
