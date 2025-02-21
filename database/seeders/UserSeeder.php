@@ -22,7 +22,7 @@ class UserSeeder extends Seeder
         foreach ($admins as $admin) {
             User::factory()->admin()->create([
                 'name' => $admin,
-                'email' => strtolower(str_replace(' ', '.', $admin)) . '@example.com',
+                'email' => strtolower(str_replace(' ', '.', $admin)).'@example.com',
             ]);
         }
 
@@ -34,23 +34,23 @@ class UserSeeder extends Seeder
             'Maham Mahmood',
             'Sabrina Mei',
             'Suhaana Hussain',
-            'Supervisor'
+            'Supervisor',
         ];
         foreach ($supervisors as $supervisor) {
             User::factory()->supervisor()->create([
                 'name' => $supervisors,
-                'email' => strtolower(str_replace(' ', '.', $supervisor)) . '@example.com',
+                'email' => strtolower(str_replace(' ', '.', $supervisor)).'@example.com',
             ]);
         }
 
         // create staff members
         $staffs = [
-            'Staff'
+            'Staff',
         ];
         foreach ($staffs as $staff) {
             User::factory()->create([
                 'name' => $staff,
-                'email' => strtolower(str_replace(' ', '.', $staff)) . '@example.com',
+                'email' => strtolower(str_replace(' ', '.', $staff)).'@example.com',
             ]);
         }
         User::factory(10)->create();
