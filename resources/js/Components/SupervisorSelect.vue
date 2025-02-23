@@ -21,25 +21,32 @@ import { CheckIcon, ChevronsUpDown } from 'lucide-vue-next';
 import { Avatar, AvatarFallback } from './ui/avatar';
 
 interface Props {
-    users: User[];
-    disabled: boolean;
-    buttonClass?: string;
+    superisorsAndAdmins: User[]; // List of users (supervisors and admins)
+    disabled: boolean; // Disable selection feature if true
+    buttonClass?: string; // Optional class for styling the button
 }
 
 const props = defineProps<Props>();
+// Selected user state (ID of selected user or null if none is selected)
 const selectedUser = defineModel<number | null>({
     required: true,
     default: null,
 });
-const searchTerm = ref('');
+// Search query for filtering users
+const searchQuery = ref('');
 
+// Computed property to filter and sort the user list
+// these users will be displayed in the dropdown
 const filteredPeople = computed(() => {
-    const filtered = props.users.filter(
+    const filtered = props.superisorsAndAdmins.filter(
         (user) =>
-            user.name?.toLowerCase().includes(searchTerm.value.toLowerCase()) ||
-            user.email?.toLowerCase().includes(searchTerm.value.toLowerCase()),
+            user.name
+                ?.toLowerCase()
+                .includes(searchQuery.value.toLowerCase()) ||
+            user.email?.toLowerCase().includes(searchQuery.value.toLowerCase()),
     );
 
+    // Sort to ensure the selected user appears first in the list
     return filtered.sort((a, b) => {
         const aSelected = selectedUser.value === a.id;
         const bSelected = selectedUser.value === b.id;
@@ -49,12 +56,15 @@ const filteredPeople = computed(() => {
     });
 });
 
+// Function to check if a user is currently selected
 const isUserSelected = (userId: number) => selectedUser.value === userId;
 
+// Function to toggle user selection
 const selectUser = (userId: number) => {
     selectedUser.value = selectedUser.value === userId ? null : userId;
 };
 
+// Function to get initials from a user's name
 const getInitials = (name: string) => {
     return name
         .split(' ')
@@ -64,19 +74,22 @@ const getInitials = (name: string) => {
         .slice(0, 2);
 };
 
+// Computed property to get details of the selected user
 const selectedUserData = computed(() =>
-    props.users.find((user) => user.id === selectedUser.value),
+    props.superisorsAndAdmins.find((user) => user.id === selectedUser.value),
 );
 </script>
 
 <template>
     <Popover>
         <PopoverTrigger as-child>
+            <!-- button that shows the dropdown with user name -->
             <Button
                 variant="outline"
                 :class="cn('justify-between', props.buttonClass)"
             >
                 <span>
+                    <!-- if user is selected then show user data -->
                     <template v-if="selectedUserData">
                         {{ selectedUserData.name }}
                     </template>
@@ -87,12 +100,13 @@ const selectedUserData = computed(() =>
         </PopoverTrigger>
 
         <PopoverContent class="w-96 p-0" align="start">
+            <!-- dropdown with search and users -->
             <Command
-                v-model:search-term="searchTerm"
+                v-model:search-term="searchQuery"
                 :disabled="props.disabled"
             >
                 <CommandInput
-                    v-model="searchTerm"
+                    v-model="searchQuery"
                     placeholder="Search supervisors..."
                 />
                 <CommandList>
@@ -106,6 +120,7 @@ const selectedUserData = computed(() =>
                             :disabled="props.disabled"
                         >
                             <div class="flex flex-1 items-center gap-3">
+                                <!-- show a check if user is selected -->
                                 <div
                                     :class="
                                         cn(

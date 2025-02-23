@@ -22,37 +22,40 @@ import { computed, ref, watch } from 'vue';
 import { Avatar, AvatarFallback } from './ui/avatar';
 
 interface Props {
-    users: User[];
+    users: User[]; // List of all available users
     disabled: boolean;
-    assigneeIds: number[];
-    buttonClass?: string;
+    assigneeIds: number[]; // List of assigned users (these should not be selectable)
+    supervisorId: number | null; // A supervisor who should also not be selectable
+    buttonClass?: string; // Optional CSS class for styling the button
 }
 
 const props = defineProps<Props>();
+// Create a two-way bound model for selected viewers
 const selectedViewers = defineModel<number[]>({ required: true, default: [] });
-const searchTerm = ref('');
+// Search query for filtering users
+const searchQuery = ref('');
 
-watch(
-    () => props.assigneeIds,
-    (newAssigneeIds) => {
-        selectedViewers.value = selectedViewers.value.filter(
-            (viewerId) => !newAssigneeIds.includes(viewerId),
-        );
-    },
-    { deep: true },
-);
-
+// Compute a list of users that can be selected (i.e., those who are not assigned or supervisors)
 const availableUsers = computed(() => {
-    return props.users.filter((user) => !props.assigneeIds.includes(user.id));
+    return props.users.filter(
+        (user) =>
+            !props.assigneeIds.includes(user.id) &&
+            props.supervisorId !== user.id,
+    );
 });
 
+// Computed property to filter users based on search term
+// these users will be displayed in the dropdown
 const filteredPeople = computed(() => {
     const filtered = availableUsers.value.filter(
         (user) =>
-            user.name?.toLowerCase().includes(searchTerm.value.toLowerCase()) ||
-            user.email?.toLowerCase().includes(searchTerm.value.toLowerCase()),
+            user.name
+                ?.toLowerCase()
+                .includes(searchQuery.value.toLowerCase()) ||
+            user.email?.toLowerCase().includes(searchQuery.value.toLowerCase()),
     );
 
+    // Sort to ensure the selected user appears first in the list
     return filtered.sort((a, b) => {
         const aSelected = selectedViewers.value.includes(a.id);
         const bSelected = selectedViewers.value.includes(b.id);
@@ -62,9 +65,11 @@ const filteredPeople = computed(() => {
     });
 });
 
+// Function to check if a user is selected
 const isUserSelected = (userId: number) =>
     selectedViewers.value.includes(userId);
 
+// Function to toggle selection state of a user
 const toggleUser = (userId: number) => {
     const index = selectedViewers.value.indexOf(userId);
     if (index === -1) {
@@ -82,11 +87,30 @@ const getInitials = (name: string) => {
         .toUpperCase()
         .slice(0, 2);
 };
+
+// Watch for changes in assigneeIds and remove them from selectedViewers
+watch(props.assigneeIds, (newAssigneeIds) => {
+    selectedViewers.value = selectedViewers.value.filter(
+        (viewerId) => !newAssigneeIds.includes(viewerId),
+    );
+});
+
+// Watch for changes in supervisorId and remove it from selectedViewers if it was previously selected
+watch(
+    () => props.supervisorId,
+    (newSupervisorId) => {
+        selectedViewers.value = selectedViewers.value.filter(
+            (viewerId) => newSupervisorId !== viewerId,
+        );
+    },
+    { deep: true },
+);
 </script>
 
 <template>
     <Popover>
         <PopoverTrigger as-child>
+            <!-- button that display the dropdown to select viewers -->
             <Button
                 variant="outline"
                 :class="cn('justify-between', props.buttonClass)"
@@ -97,6 +121,7 @@ const getInitials = (name: string) => {
 
                     <template v-if="selectedViewers.length > 0">
                         <Separator orientation="vertical" class="h-4" />
+                        <!-- display how many viewers are selected -->
                         <Badge variant="secondary">
                             {{ selectedViewers.length }} selected
                         </Badge>
@@ -106,12 +131,13 @@ const getInitials = (name: string) => {
         </PopoverTrigger>
 
         <PopoverContent class="w-96 p-0" align="start">
+            <!-- dropdown with search that display viewers -->
             <Command
-                v-model:search-term="searchTerm"
+                v-model:search-term="searchQuery"
                 :disabled="props.disabled"
             >
                 <CommandInput
-                    v-model="searchTerm"
+                    v-model="searchQuery"
                     placeholder="Search users..."
                 />
                 <CommandList>
@@ -125,6 +151,7 @@ const getInitials = (name: string) => {
                             :disabled="props.disabled"
                         >
                             <div class="flex flex-1 items-center gap-3">
+                                <!-- display check if the user is selected -->
                                 <div
                                     :class="
                                         cn(

@@ -22,42 +22,49 @@ import { computed, ref } from 'vue';
 import { Avatar, AvatarFallback } from './ui/avatar';
 
 interface Props {
-    users: User[];
-    disabled: boolean;
-    buttonClass?: string;
+    users: User[]; // List of available users
+    disabled: boolean; // Whether select is disabled
+    buttonClass?: string; // Optional CSS class for button styling
 }
 
 const props = defineProps<Props>();
-const selectedUsers = defineModel<number[]>({ required: true, default: [] });
-const searchTerm = ref('');
+// Selected user state (ID of selected user or null if none is selected)
+const selectedAssignees = defineModel<number[]>({ required: true, default: [] });
+// Search query for filtering users
+const searchQuery = ref('');
 
+// Computed property to filter users based on search term
+// these users will be displayed in the dropdown
 const filteredPeople = computed(() => {
     const filtered = props.users.filter(
         (user) =>
-            user.name?.toLowerCase().includes(searchTerm.value.toLowerCase()) ||
-            user.email?.toLowerCase().includes(searchTerm.value.toLowerCase()),
+            user.name?.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+            user.email?.toLowerCase().includes(searchQuery.value.toLowerCase()),
     );
 
+    // Sort to ensure the selected user appears first in the list
     return filtered.sort((a, b) => {
-        const aSelected = selectedUsers.value.includes(a.id);
-        const bSelected = selectedUsers.value.includes(b.id);
+        const aSelected = selectedAssignees.value.includes(a.id);
+        const bSelected = selectedAssignees.value.includes(b.id);
         if (aSelected && !bSelected) return -1;
         if (!aSelected && bSelected) return 1;
         return 0;
     });
 });
 
-const isUserSelected = (userId: number) => selectedUsers.value.includes(userId);
+// Function to check if a user is currently selected
+const isUserSelected = (userId: number) => selectedAssignees.value.includes(userId);
 
 const toggleUser = (userId: number) => {
-    const index = selectedUsers.value.indexOf(userId);
+    const index = selectedAssignees.value.indexOf(userId);
     if (index === -1) {
-        selectedUsers.value.push(userId);
+        selectedAssignees.value.push(userId);
     } else {
-        selectedUsers.value.splice(index, 1);
+        selectedAssignees.value.splice(index, 1);
     }
 };
 
+// Function to get initials from a user's name
 const getInitials = (name: string) => {
     return name
         .split(' ')
@@ -71,6 +78,7 @@ const getInitials = (name: string) => {
 <template>
     <Popover>
         <PopoverTrigger as-child>
+            <!-- button that display the dropdown to select assignees -->
             <Button
                 variant="outline"
                 :class="cn('justify-between', props.buttonClass)"
@@ -78,10 +86,11 @@ const getInitials = (name: string) => {
                 <span>Select Assignees</span>
                 <div class="inline-flex items-center gap-2">
                     <ChevronsUpDown class="h-4 w-4 shrink-0 opacity-50" />
-                    <template v-if="selectedUsers.length > 0">
+                    <!-- display how many assignees are selected -->
+                    <template v-if="selectedAssignees.length > 0">
                         <Separator orientation="vertical" class="h-4" />
                         <Badge variant="secondary">
-                            {{ selectedUsers.length }} selected
+                            {{ selectedAssignees.length }} selected
                         </Badge>
                     </template>
                 </div>
@@ -89,12 +98,13 @@ const getInitials = (name: string) => {
         </PopoverTrigger>
 
         <PopoverContent class="w-96 p-0" align="start">
+            <!-- dropdown with search that display viewers -->
             <Command
-                v-model:search-term="searchTerm"
+                v-model:search-term="searchQuery"
                 :disabled="props.disabled"
             >
                 <CommandInput
-                    v-model="searchTerm"
+                    v-model="searchQuery"
                     placeholder="Search users..."
                 />
                 <CommandList>
@@ -108,6 +118,7 @@ const getInitials = (name: string) => {
                             :disabled="props.disabled"
                         >
                             <div class="flex flex-1 items-center gap-3">
+                                <!-- display check if the user is selected -->
                                 <div
                                     :class="
                                         cn(
