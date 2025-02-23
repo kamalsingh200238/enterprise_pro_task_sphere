@@ -2,11 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreProjectRequest;
 use App\Models\Priority;
+use App\Models\Project;
 use App\Models\Status;
 use App\Models\User;
+use DB;
+use Gate;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Str;
 
 class ProjectController extends Controller
 {
@@ -19,37 +24,63 @@ class ProjectController extends Controller
     }
 
     /**
-     * Show the form for creating a new resource.
+     * Show the form for creating a new project.
      */
     public function create()
     {
+        // check if user can access this page, i.e. only admins and supervisors
+        Gate::authorize('create', Project::class);
+
+        // show the create project form to user
         return Inertia::render('Project/CreateProject', [
             'statuses' => Status::all(),
             'priorities' => Priority::all(),
             'users' => User::all(),
-            'supervisors' => User::getAllSupervisorAndAdmins(),
+            'supervisorsAndAdmins' => User::getAllSupervisorAndAdmins(),
         ]);
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreProjectRequest $request)
     {
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'description' => ['nullable', 'string'],
-            'start_date' => ['required', 'date'],
-            'due_date' => ['required', 'date', 'after_or_equal:start_date'],
-            'status_id' => ['required', 'exists:statuses,id'],
-            'priority_id' => ['required', 'exists:priorities,id'],
-            'supervisor_id' => ['required', 'exists:users,id'],
-            'assignees' => ['required', 'array', 'min:1'],
-            'assignees.*' => ['exists:users,id'],
-            'is_private' => ['boolean'],
-            'viewers' => ['array', 'prohibited_unless:is_private,true'],
-            'viewers.*' => ['exists:users,id'],
-        ]);
+        // check if user can create a project
+        Gate::authorize('create', Project::class);
+
+        // get the validated data from request
+        $validated = $request->validated();
+
+        try {
+            $project = DB::transaction(function () use ($validated) {
+                $project = Project::create(
+                    [
+                        ...$validated,
+                        'created_by' => auth()->id(),
+                        'updated_by' => auth()->id(),
+                    ]
+                );
+
+                $project->slug = 'PROJECT-' . $project->id;
+                $project->saveQuietly();
+
+                if (isset($validated['assignees'])) {
+                    $project->assignees()->attach($validated['assignees']);
+                }
+
+                if (isset($validated['viewers'])) {
+                    $project->viewers()->attach($validated['viewers']);
+                }
+
+                return $project;
+            });
+            return to_route('projects.create')->with('message', ["value" => 'completely changed value: ' . $project->slug, 'duration' => 5000]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Failed to create project',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
