@@ -37,7 +37,6 @@
         "clsx": "^2.1.1",
         "date-fns": "^4.1.0",
         "lucide-vue-next": "^0.475.0",
-        "radix-vue": "^1.9.14",
         "reka-ui": "^2.0.0",
         "tailwind-merge": "^3.0.2",
         "tailwindcss-animate": "^1.0.7",
