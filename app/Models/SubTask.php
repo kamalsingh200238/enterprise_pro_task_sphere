@@ -32,16 +32,6 @@ class SubTask extends Model
         'updated_at' => 'datetime',
     ];
 
-    protected static function boot()
-    {
-        parent::boot();
-
-        static::created(function ($project) {
-            $project->slug = 'STASK-'.$project->id;
-            $project->saveQuietly();
-        });
-    }
-
     public function parent()
     {
         return $this->belongsTo(Task::class);

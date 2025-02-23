@@ -31,16 +31,6 @@ class Project extends Model
         'updated_at' => 'datetime',
     ];
 
-    protected static function boot()
-    {
-        parent::boot();
-
-        static::created(function ($project) {
-            $project->slug = 'PROJECT-'.$project->id;
-            $project->saveQuietly();
-        });
-    }
-
     public function status()
     {
         return $this->belongsTo(Status::class);
