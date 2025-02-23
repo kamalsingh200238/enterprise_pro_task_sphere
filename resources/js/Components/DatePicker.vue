@@ -39,7 +39,7 @@ const formatDate = (date: Date) => format(date, 'MMM d, yyyy');
                 {{ date ? formatDate(date) : 'Pick a date' }}
             </Button>
         </PopoverTrigger>
-        <PopoverContent class="w-auto p-0">
+        <PopoverContent align="start" class="w-auto p-0">
             <Calendar v-model="date" initial-focus />
         </PopoverContent>
     </Popover>
