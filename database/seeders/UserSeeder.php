@@ -38,7 +38,7 @@ class UserSeeder extends Seeder
         ];
         foreach ($supervisors as $supervisor) {
             User::factory()->supervisor()->create([
-                'name' => $supervisors,
+                'name' => $supervisor,
                 'email' => strtolower(str_replace(' ', '.', $supervisor)).'@example.com',
             ]);
         }
