@@ -13,11 +13,13 @@ import { Textarea } from '@/Components/ui/textarea';
 import ViewerSelector from '@/Components/ViewerSelector.vue';
 import { Priority, Status, User } from '@/types';
 import { Head, useForm } from '@inertiajs/vue3';
+import { watch } from 'vue';
 
 interface Props {
     statuses: Status[];
     priorities: Priority[];
     users: User[];
+    supervisorsAndAdmins: User[];
 }
 
 const props = defineProps<Props>();
@@ -49,6 +51,12 @@ const form = useForm<FormType>({
 });
 
 const submit = () => {
+    // if project is private remove all viewers
+    if (!form.is_private) {
+        form.viewers = [];
+    }
+
+    // submit form
     form.post(route('projects.store'), {
         onSuccess: () => {
             form.reset();
@@ -61,7 +69,7 @@ const submit = () => {
     <Head title="Create New Project" />
     <main class="mx-auto max-w-7xl p-8">
         <form @submit.prevent="submit">
-            <div class="grid lg:grid-cols-3 gap-8">
+            <div class="grid gap-8 lg:grid-cols-3">
                 <div class="col-span-2 space-y-6">
                     <div>
                         <Label for="name">Project Name </Label>
@@ -70,7 +78,11 @@ const submit = () => {
                     </div>
                     <div>
                         <Label for="description">Description</Label>
-                        <Textarea id="description" v-model="form.description" rows="20"/>
+                        <Textarea
+                            id="description"
+                            v-model="form.description"
+                            rows="20"
+                        />
                         <FormError :err="form.errors.description" />
                     </div>
                 </div>
@@ -118,7 +130,9 @@ const submit = () => {
                             <SupervisorSelect
                                 id="supervisor-selector"
                                 :disabled="false"
-                                :users="users"
+                                :superisorsAndAdmins="
+                                    props.supervisorsAndAdmins
+                                "
                                 v-model="form.supervisor_id"
                             />
                         </div>
@@ -139,7 +153,10 @@ const submit = () => {
                         <FormError :err="form.errors.assignees" />
                     </div>
                     <div class="flex items-center space-x-2">
-                        <Checkbox id="is-private" v-model="form.is_private" />
+                        <Checkbox
+                            id="is-private"
+                            v-model:checked="form.is_private"
+                        />
                         <label
                             for="is-private"
                             class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
@@ -147,7 +164,8 @@ const submit = () => {
                             Private
                         </label>
                     </div>
-                    <div>
+                    <!-- display viewers selector when project is private -->
+                    <div v-if="form.is_private === true">
                         <div class="flex flex-col gap-1">
                             <Label for="viewers-selector">
                                 Select Viewers
@@ -157,10 +175,11 @@ const submit = () => {
                                 :users="users"
                                 v-model="form.viewers"
                                 :assignee-ids="form.assignees"
+                                :supervisor-id="form.supervisor_id"
                                 :disabled="false"
                             />
                         </div>
-                        <FormError :err="form.errors.supervisor_id" />
+                        <FormError :err="form.errors.viewers" />
                     </div>
                 </div>
             </div>
