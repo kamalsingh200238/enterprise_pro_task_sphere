@@ -12,7 +12,7 @@ class FlashMessage
 
     public int $duration;
 
-    public function __construct(string $heading, string $description = '', string $variant = 'success', int $duration = 5000)
+    public function __construct(string $heading, string $description = '', string $variant = 'success', int $duration = 10000)
     {
         $this->heading = $heading;
         $this->description = $description;
