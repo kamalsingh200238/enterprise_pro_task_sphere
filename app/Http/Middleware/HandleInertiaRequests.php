@@ -35,6 +35,7 @@ class HandleInertiaRequests extends Middleware
                 'user' => $request->user(),
             ],
             'flash' => fn () => request()->session()->get('flash'),
+            'createdProject' => fn () => request()->session()->get('createdProject'),
         ];
     }
 }
