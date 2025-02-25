@@ -17,9 +17,9 @@ const props = defineProps<Props>();
 const modelValue = defineModel<number | null>();
 
 const selectValue = computed({
-    get: () => modelValue.value?.toString() ?? '',
+    get: () => modelValue.value?.toString() ?? null,
     set: (value: string) => {
-        modelValue.value = value === '' ? null : parseInt(value, 10);
+        modelValue.value = value === null ? null : parseInt(value, 10);
     }
 });
 </script>

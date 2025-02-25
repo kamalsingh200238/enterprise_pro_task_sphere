@@ -159,7 +159,7 @@ const submit = () => {
                         <div class="flex items-center space-x-2">
                             <Checkbox
                                 id="is-private"
-                                v-model:checked="form.is_private"
+                                v-model="form.is_private"
                             />
                             <label
                                 for="is-private"
