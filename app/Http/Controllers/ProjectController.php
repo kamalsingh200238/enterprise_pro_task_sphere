@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\FlashMessage;
 use App\Http\Requests\StoreProjectRequest;
 use App\Models\Priority;
 use App\Models\Project;
@@ -11,17 +12,13 @@ use DB;
 use Gate;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
-use Str;
 
 class ProjectController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
-    {
-        //
-    }
+    public function index() {}
 
     /**
      * Show the form for creating a new project.
@@ -61,25 +58,26 @@ class ProjectController extends Controller
                     ]
                 );
 
-                $project->slug = 'PROJECT-' . $project->id;
+                $project->slug = 'PROJECT-'.$project->id;
                 $project->saveQuietly();
 
+                // attach assignees if they exist
                 if (isset($validated['assignees'])) {
                     $project->assignees()->attach($validated['assignees']);
                 }
 
+                // attach viewers if they exist
                 if (isset($validated['viewers'])) {
                     $project->viewers()->attach($validated['viewers']);
                 }
 
+                // return project
                 return $project;
             });
-            return to_route('projects.create')->with('message', ["value" => 'completely changed value: ' . $project->slug, 'duration' => 5000]);
+
+            return to_route('projects.create');
         } catch (\Exception $e) {
-            return response()->json([
-                'message' => 'Failed to create project',
-                'error' => $e->getMessage()
-            ], 500);
+            back()->with('flash', new FlashMessage('There was an error in creating the project', '', 'danger')->toArray());
         }
     }
 
