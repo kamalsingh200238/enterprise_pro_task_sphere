@@ -9,7 +9,15 @@ use App\UserRole;
 class ProjectPolicy
 {
     /**
-     * Determine whether the user can view the model.
+     * Determine whether the user can view all the projects.
+     */
+    public function viewAll(User $user): bool
+    {
+        return $user->hasRole([UserRole::ADMIN, UserRole::SUPERVISOR]);
+    }
+
+    /**
+     * Determine whether the user can view the project.
      */
     public function view(User $user, Project $project): bool
     {
