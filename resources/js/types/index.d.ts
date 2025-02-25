@@ -10,7 +10,15 @@ export type PageProps<
     auth: {
         user: User;
     };
+    flash: FlashMessage;
 };
+
+export interface FlashMessage {
+    heading: string;
+    description: string;
+    variant: 'success' | 'danger';
+    duraton: number;
+}
 
 export interface Status {
     id: number;
