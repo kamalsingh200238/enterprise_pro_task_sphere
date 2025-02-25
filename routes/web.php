@@ -17,8 +17,10 @@ Route::middleware('auth')->group(function () {
         return Inertia::render('Dashboard');
     })->name('dashboard');
 
+    Route::get('/projects', [ProjectController::class, 'index'])->name('projects.show-all');
     Route::get('/projects/new', [ProjectController::class, 'create'])->name('projects.create');
     Route::post('/projects', [ProjectController::class, 'store'])->name('projects.store');
+    Route::get('/projects/{project}', [ProjectController::class, 'show'])->name('projects.show');
 });
 
 require __DIR__.'/auth.php';

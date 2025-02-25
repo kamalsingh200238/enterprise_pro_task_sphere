@@ -12,13 +12,22 @@ use DB;
 use Gate;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Symfony\Component\CssSelector\Exception\InternalErrorException;
 
 class ProjectController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index() {}
+    public function index()
+    {
+        // check if user can access this page, i.e. only admins and supervisors
+        Gate::authorize('viewAll', Project::class);
+
+        return Inertia::render('Project/AllProjects', [
+            'projects' => Project::all(),
+        ]);
+    }
 
     /**
      * Show the form for creating a new project.
@@ -45,6 +54,7 @@ class ProjectController extends Controller
         // check if user can create a project
         Gate::authorize('create', Project::class);
 
+
         // get the validated data from request
         $validated = $request->validated();
 
@@ -58,7 +68,7 @@ class ProjectController extends Controller
                     ]
                 );
 
-                $project->slug = 'PROJECT-'.$project->id;
+                $project->slug = 'PROJECT-' . $project->id;
                 $project->saveQuietly();
 
                 // attach assignees if they exist
@@ -74,27 +84,34 @@ class ProjectController extends Controller
                 // return project
                 return $project;
             });
-
-            return to_route('projects.create');
+            return to_route('projects.show-all')->with('createdProject', $project);
         } catch (\Exception $e) {
-            back()->with('flash', new FlashMessage('There was an error in creating the project', '', 'danger')->toArray());
+            return back()->with('flash', new FlashMessage('There was an error in creating the project', '', 'danger')->toArray());
         }
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(Project $project)
     {
-        //
+        Gate::authorize('view', arguments: $project);
+
+        return Inertia::render('Project/ShowProject', [
+            'project' => $project,
+            'statuses' => Status::all(),
+            'priorities' => Priority::all(),
+            'users' => User::all(),
+            'supervisorsAndAdmins' => User::getAllSupervisorAndAdmins(),
+        ]);
     }
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(string $id)
+    public function edit(Project $project)
     {
-        //
+        Gate::authorize('edit');
     }
 
     /**
@@ -102,7 +119,6 @@ class ProjectController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
     }
 
     /**
@@ -110,6 +126,5 @@ class ProjectController extends Controller
      */
     public function destroy(string $id)
     {
-        //
     }
 }
