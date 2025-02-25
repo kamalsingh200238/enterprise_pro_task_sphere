@@ -13,7 +13,7 @@ class ProjectPolicy
      */
     public function view(User $user, Project $project): bool
     {
-        if (!$project->is_private) {
+        if (! $project->is_private) {
             return true;
         }
 
