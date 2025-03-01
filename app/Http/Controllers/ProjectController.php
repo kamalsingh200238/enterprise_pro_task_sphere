@@ -12,7 +12,6 @@ use DB;
 use Gate;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
-use Symfony\Component\CssSelector\Exception\InternalErrorException;
 
 class ProjectController extends Controller
 {
@@ -54,50 +53,53 @@ class ProjectController extends Controller
         // check if user can create a project
         Gate::authorize('create', Project::class);
 
-
         // get the validated data from request
         $validated = $request->validated();
 
-        try {
-            $project = DB::transaction(function () use ($validated) {
-                $project = Project::create(
-                    [
-                        ...$validated,
-                        'created_by' => auth()->id(),
-                        'updated_by' => auth()->id(),
-                    ]
-                );
+        $project = DB::transaction(function () use ($validated) {
+            $project = Project::create(
+                [
+                    ...$validated,
+                    'created_by' => auth()->id(),
+                    'updated_by' => auth()->id(),
+                ]
+            );
 
-                $project->slug = 'PROJECT-' . $project->id;
-                $project->saveQuietly();
+            $project->slug = 'PROJECT-' . $project->id;
+            $project->saveQuietly();
 
-                // attach assignees if they exist
-                if (isset($validated['assignees'])) {
-                    $project->assignees()->attach($validated['assignees']);
-                }
+            // attach assignees if they exist
+            if (isset($validated['assignees'])) {
+                $project->assignees()->attach($validated['assignees']);
+            }
 
-                // attach viewers if they exist
-                if (isset($validated['viewers'])) {
-                    $project->viewers()->attach($validated['viewers']);
-                }
+            // attach viewers if they exist
+            if (isset($validated['viewers'])) {
+                $project->viewers()->attach($validated['viewers']);
+            }
 
-                // return project
-                return $project;
-            });
-            return to_route('projects.show-all')->with('createdProject', $project);
-        } catch (\Exception $e) {
-            return back()->with('flash', new FlashMessage('There was an error in creating the project', '', 'danger')->toArray());
-        }
+            // return project
+            return $project;
+        });
+
+        return to_route('projects.show-all')->with('created', $project);
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(Project $project)
+    public function show(int $id)
     {
+        $project = Project::with(['assignees:id', 'viewers:id'])->findOrFail($id);
+
         Gate::authorize('view', arguments: $project);
 
         return Inertia::render('Project/ShowProject', [
+            'can' => [
+                'edit' => auth()->user()->can('edit', $project),
+                'updateStatus' => auth()->user()->can('updateStatus', $project),
+                'updateStatusToDone' => auth()->user()->can('updateStatusToDone', Project::class),
+            ],
             'project' => $project,
             'statuses' => Status::all(),
             'priorities' => Priority::all(),
@@ -109,22 +111,76 @@ class ProjectController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Project $project)
+    public function edit(StoreProjectRequest $request, Project $project)
     {
-        Gate::authorize('edit');
+        Gate::authorize('edit', $project);
+
+        // Get validated data
+        $validated = $request->validated();
+
+        $updatedProject = DB::transaction(function () use ($validated, $project) {
+            // Update the project with validated data
+            $project->update([
+                ...$validated,
+                'updated_by' => auth()->id(),
+            ]);
+
+            // Update assignees if they exist in the request
+            if (isset($validated['assignees'])) {
+                $project->assignees()->sync($validated['assignees']);
+            }
+
+            // Update viewers if they exist in the request
+            if (isset($validated['viewers'])) {
+                $project->viewers()->sync($validated['viewers']);
+            }
+
+            return $project;
+        });
+
+        return to_route('projects.show', $updatedProject->id)
+            ->with('flash', new FlashMessage('Project updated successfully', '', 'success')->toArray());
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function updateStatus(Request $request, Project $project)
     {
+        Gate::authorize('updateStatus', $project);
+
+        // Validate the incoming request data
+        $validated = $request->validate([
+            'status_id' => ['required', 'exists:statuses,id'],
+        ]);
+
+        $doneStatusId = Status::where('name', 'Done')->first()->id;
+
+        // Check if user is trying to set status to "done"
+        if ($validated['status_id'] == $doneStatusId) {
+            Gate::authorize('updateStatusToDone', $project);
+        }
+
+        // Update the project with the new status
+        $project->update([
+            'status_id' => $validated['status_id'],
+        ]);
+
+        return to_route('projects.show', $project->id)
+            ->with('flash', new FlashMessage('Project updated successfully', '', 'success')->toArray());
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function delete(Project $project)
     {
+        Gate::authorize('delete', $project);
+        $deleted = $project->delete();
+        if ($deleted) {
+            return to_route('projects.show-all')
+                ->with('deleted', $project);
+        }
+        return back()->with('flash', new FlashMessage('There was a problem in deleting project', '', 'danger')->toArray());
     }
 }
