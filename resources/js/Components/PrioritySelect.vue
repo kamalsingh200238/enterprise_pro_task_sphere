@@ -1,16 +1,20 @@
 <script setup lang="ts">
-import type { Priority } from '@/types';
-import Select from './ui/select/Select.vue';
-import SelectContent from './ui/select/SelectContent.vue';
-import SelectGroup from './ui/select/SelectGroup.vue';
-import SelectItem from './ui/select/SelectItem.vue';
-import SelectTrigger from './ui/select/SelectTrigger.vue';
-import SelectValue from './ui/select/SelectValue.vue';
 import { priorityIcons } from '@/lib/PriorityIcons';
+import type { Priority } from '@/types';
 import { computed } from 'vue';
+import {
+    Select,
+    SelectContent,
+    SelectGroup,
+    SelectItem,
+    SelectLabel,
+    SelectTrigger,
+    SelectValue,
+} from './ui/select';
 
 interface Props {
     priorities: Priority[];
+    disabled: boolean;
 }
 
 const props = defineProps<Props>();
@@ -20,26 +24,27 @@ const selectValue = computed({
     get: () => modelValue.value?.toString() ?? null,
     set: (value: string) => {
         modelValue.value = value === null ? null : parseInt(value, 10);
-    }
+    },
 });
 </script>
 
 <template>
-    <Select v-model="selectValue">
+    <Select v-model="selectValue" :disabled="props.disabled">
         <SelectTrigger>
             <SelectValue placeholder="Select a Priority" />
         </SelectTrigger>
         <SelectContent>
             <SelectGroup>
+                <SelectLabel>Priorities</SelectLabel>
                 <SelectItem
                     v-for="priority in props.priorities"
                     :key="priority.id"
                     :value="priority.id.toString()"
                 >
                     <span class="flex items-center gap-2">
-                        <component 
-                            :is="priorityIcons[priority.name]" 
-                            class="h-4 w-4" 
+                        <component
+                            :is="priorityIcons[priority.name]"
+                            class="h-4 w-4"
                         />
                         {{ priority.name }}
                     </span>
