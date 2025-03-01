@@ -11,6 +11,11 @@ import { format, formatISO, parseISO } from 'date-fns';
 import { Calendar as CalendarIcon } from 'lucide-vue-next';
 import { computed } from 'vue';
 
+interface Props {
+    disabled: boolean;
+}
+
+const props = defineProps<Props>();
 const dateString = defineModel<string>();
 const date = computed({
     get() {
@@ -28,12 +33,8 @@ const formatDate = (date: Date) => format(date, 'MMM d, yyyy');
         <PopoverTrigger as-child>
             <Button
                 variant="outline"
-                :class="
-                    cn(
-                        'justify-start',
-                        !date && 'text-muted-foreground',
-                    )
-                "
+                :class="cn('justify-start', !date && 'text-muted-foreground')"
+                :disabled="props.disabled"
             >
                 <CalendarIcon class="mr-2 h-4 w-4" />
                 {{ date ? formatDate(date) : 'Pick a date' }}
