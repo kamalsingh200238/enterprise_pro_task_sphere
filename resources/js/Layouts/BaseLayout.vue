@@ -6,7 +6,8 @@ import { toast } from 'vue-sonner';
 
 const page = usePage();
 const flash = computed(() => page.props.flash);
-const createdProject = computed(() => page.props.createdProject);
+const created = computed(() => page.props.created);
+const deleted = computed(() => page.props.deleted);
 
 watch(
     flash,
@@ -40,13 +41,29 @@ watch(
 );
 
 watch(
-    createdProject,
+    created,
     (newValue) => {
         if (!newValue) {
             return;
         }
         nextTick(() => {
             toast.success('Created project successfully', {
+                duration: 10000,
+                closeButton: true,
+            });
+        });
+    },
+    { immediate: true },
+);
+
+watch(
+    deleted,
+    (newValue) => {
+        if (!newValue) {
+            return;
+        }
+        nextTick(() => {
+            toast.error('Deleted project successfully', {
                 duration: 10000,
                 closeButton: true,
             });
