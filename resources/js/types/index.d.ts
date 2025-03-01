@@ -11,7 +11,8 @@ export type PageProps<
         user: User;
     };
     flash: FlashMessage;
-    createdProject: Project;
+    created: Project;
+    deleted: Project;
 };
 
 export interface FlashMessage {
@@ -28,12 +29,12 @@ export interface Project {
     description: string;
     start_date: string;
     due_date: string;
-    status_id: number | null;
-    priority_id: number | null;
+    status_id: number;
+    priority_id: number;
     is_private: boolean;
-    supervisor_id: number | null;
-    assignees: number[];
-    viewers: number[];
+    supervisor_id: number;
+    assignees: User[];
+    viewers: User[];
 }
 
 export interface Status {
