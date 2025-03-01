@@ -94,6 +94,8 @@ const submit = () => {
                                 id="status"
                                 v-model="form.status_id"
                                 :statuses="props.statuses"
+                                :disabled="false"
+                                :update-status-to-done="true"
                             />
                             <FormError :err="form.errors.status_id" />
                         </div>
@@ -103,6 +105,7 @@ const submit = () => {
                                 id="priority"
                                 v-model="form.priority_id"
                                 :priorities="props.priorities"
+                                :disabled="false"
                             />
                             <FormError :err="form.errors.priority_id" />
                         </div>
@@ -112,6 +115,7 @@ const submit = () => {
                                 <DatePicker
                                     id="start-date"
                                     v-model="form.start_date"
+                                    :disabled="false"
                                 />
                             </div>
                             <FormError :err="form.errors.start_date" />
@@ -122,6 +126,7 @@ const submit = () => {
                                 <DatePicker
                                     id="due-date"
                                     v-model="form.due_date"
+                                    :disabled="false"
                                 />
                             </div>
                             <FormError :err="form.errors.due_date" />
