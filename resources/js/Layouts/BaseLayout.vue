@@ -40,7 +40,7 @@ const createdProjectToast = (flash: FlashMessage) => {
                 label: 'Open',
                 onClick: () => {
                     router.get(
-                        route('projects.show', flash.context.project.id),
+                        route('projects.show', flash.context.project?.id),
                     );
                 },
             },
