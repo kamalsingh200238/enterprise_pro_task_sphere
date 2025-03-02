@@ -49,10 +49,18 @@ class ProjectPolicy
     /**
      * Determine whether the user can update the status and priority.
      */
-    public function updateStatusAndPriority(User $user, Project $project)
+    public function updateStatus(User $user, Project $project)
     {
         return $user->hasRole([UserRole::ADMIN, UserRole::SUPERVISOR]) ||
             $project->assignees->contains($user->id);
+    }
+
+    /**
+     * Determine whether the user can update the status and priority.
+     */
+    public function updateStatusToDone(User $user)
+    {
+        return $user->hasRole([UserRole::ADMIN, UserRole::SUPERVISOR]);
     }
 
     /**
