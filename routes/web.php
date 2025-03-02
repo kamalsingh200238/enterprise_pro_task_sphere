@@ -20,7 +20,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/projects', [ProjectController::class, 'index'])->name('projects.show-all');
     Route::get('/projects/new', [ProjectController::class, 'create'])->name('projects.create');
     Route::post('/projects', [ProjectController::class, 'store'])->name('projects.store');
-    Route::get('/projects/{project}', [ProjectController::class, 'show'])->name('projects.show');
+    Route::put('/projects/status/{project}', [ProjectController::class, 'updateStatus'])->name('projects.update-status');
+    Route::get('/projects/{id}', [ProjectController::class, 'show'])->name('projects.show');
+    Route::put('/projects/{project}', [ProjectController::class, 'edit'])->name('projects.edit');
+    Route::delete('/projects/{project}', [ProjectController::class, 'delete'])->name('projects.delete');
 });
 
 require __DIR__.'/auth.php';
