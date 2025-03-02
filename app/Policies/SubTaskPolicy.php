@@ -4,7 +4,7 @@ namespace App\Policies;
 
 use App\Models\SubTask;
 use App\Models\User;
-use App\UserRole;
+use App\Enums\UserRole;
 
 class SubTaskPolicy
 {
@@ -17,7 +17,7 @@ class SubTaskPolicy
             return true;
         }
 
-        return $user->hasRole([UserRole::ADMIN, UserRole::SUPERVISOR]) ||
+        return $user->hasRole([UserRole::Admin, UserRole::Supervisor]) ||
             $subTask->assignees->contains($user->id) ||
             $subTask->viewers->contains($user->id);
     }
@@ -27,7 +27,7 @@ class SubTaskPolicy
      */
     public function create(User $user): bool
     {
-        return $user->hasRole([UserRole::ADMIN, UserRole::SUPERVISOR]);
+        return $user->hasRole([UserRole::Admin, UserRole::Supervisor]);
     }
 
     /**
@@ -35,7 +35,7 @@ class SubTaskPolicy
      */
     public function edit(User $user): bool
     {
-        return $user->hasRole([UserRole::ADMIN, UserRole::SUPERVISOR]);
+        return $user->hasRole([UserRole::Admin, UserRole::Supervisor]);
     }
 
     /**
@@ -43,7 +43,7 @@ class SubTaskPolicy
      */
     public function updateStatusAndPriority(User $user, SubTask $subTask)
     {
-        return $user->hasRole([UserRole::ADMIN, UserRole::SUPERVISOR]) ||
+        return $user->hasRole([UserRole::Admin, UserRole::Supervisor]) ||
             $subTask->assignees->contains($user->id);
     }
 
@@ -52,6 +52,6 @@ class SubTaskPolicy
      */
     public function delete(User $user): bool
     {
-        return $user->hasRole(UserRole::ADMIN);
+        return $user->hasRole(UserRole::Admin);
     }
 }

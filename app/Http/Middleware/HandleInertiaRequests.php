@@ -35,8 +35,6 @@ class HandleInertiaRequests extends Middleware
                 'user' => $request->user(),
             ],
             'flash' => fn () => request()->session()->get('flash'),
-            'created' => fn () => request()->session()->get('created'),
-            'deleted' => fn () => request()->session()->get('deleted'),
         ];
     }
 }

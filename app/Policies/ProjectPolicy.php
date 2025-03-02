@@ -4,7 +4,7 @@ namespace App\Policies;
 
 use App\Models\Project;
 use App\Models\User;
-use App\UserRole;
+use App\Enums\UserRole;
 
 class ProjectPolicy
 {
@@ -13,7 +13,7 @@ class ProjectPolicy
      */
     public function viewAll(User $user): bool
     {
-        return $user->hasRole([UserRole::ADMIN, UserRole::SUPERVISOR]);
+        return $user->hasRole([UserRole::Admin, UserRole::Supervisor]);
     }
 
     /**
@@ -25,7 +25,7 @@ class ProjectPolicy
             return true;
         }
 
-        return $user->hasRole([UserRole::ADMIN, UserRole::SUPERVISOR]) ||
+        return $user->hasRole([UserRole::Admin, UserRole::Supervisor]) ||
             $project->assignees->contains($user->id) ||
             $project->viewers->contains($user->id);
     }
@@ -35,7 +35,7 @@ class ProjectPolicy
      */
     public function create(User $user): bool
     {
-        return $user->hasRole([UserRole::ADMIN, UserRole::SUPERVISOR]);
+        return $user->hasRole([UserRole::Admin, UserRole::Supervisor]);
     }
 
     /**
@@ -43,7 +43,7 @@ class ProjectPolicy
      */
     public function edit(User $user): bool
     {
-        return $user->hasRole([UserRole::ADMIN, UserRole::SUPERVISOR]);
+        return $user->hasRole([UserRole::Admin, UserRole::Supervisor]);
     }
 
     /**
@@ -51,7 +51,7 @@ class ProjectPolicy
      */
     public function updateStatus(User $user, Project $project)
     {
-        return $user->hasRole([UserRole::ADMIN, UserRole::SUPERVISOR]) ||
+        return $user->hasRole([UserRole::Admin, UserRole::Supervisor]) ||
             $project->assignees->contains($user->id);
     }
 
@@ -60,7 +60,7 @@ class ProjectPolicy
      */
     public function updateStatusToDone(User $user)
     {
-        return $user->hasRole([UserRole::ADMIN, UserRole::SUPERVISOR]);
+        return $user->hasRole([UserRole::Admin, UserRole::Supervisor]);
     }
 
     /**
@@ -68,6 +68,6 @@ class ProjectPolicy
      */
     public function delete(User $user): bool
     {
-        return $user->hasRole(UserRole::ADMIN);
+        return $user->hasRole(UserRole::Admin);
     }
 }

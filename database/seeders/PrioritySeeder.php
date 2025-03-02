@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-use App\Color;
+use App\Enums\Color;
 use App\Models\Priority;
 use Illuminate\Database\Seeder;
 
@@ -17,19 +17,19 @@ class PrioritySeeder extends Seeder
         $priorities = [
             [
                 'name' => 'Low',
-                'color' => Color::GRAY,
+                'color' => Color::Gray,
             ],
             [
                 'name' => 'Medium',
-                'color' => Color::BLUE,
+                'color' => Color::Blue,
             ],
             [
                 'name' => 'High',
-                'color' => Color::YELLOW,
+                'color' => Color::Yellow,
             ],
             [
                 'name' => 'Urgent',
-                'color' => Color::RED,
+                'color' => Color::Red,
             ],
         ];
 

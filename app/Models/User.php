@@ -3,7 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
-use App\UserRole;
+use App\Enums\UserRole;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -59,17 +59,17 @@ class User extends Authenticatable
 
     public static function getAllSupervisorAndAdmins()
     {
-        return self::whereIn('role', [UserRole::SUPERVISOR, UserRole::ADMIN])->get();
+        return self::whereIn('role', [UserRole::Supervisor, UserRole::Admin])->get();
     }
 
     public static function getAllSupervisors()
     {
-        return self::where('role', UserRole::SUPERVISOR)->get();
+        return self::where('role', UserRole::Supervisor)->get();
     }
 
     public static function getAllAdmins()
     {
-        return self::where('role', UserRole::ADMIN)->get();
+        return self::where('role', UserRole::Admin)->get();
     }
 
     public function createdProjects()

@@ -65,7 +65,7 @@ class ProjectController extends Controller
                 ]
             );
 
-            $project->slug = 'PROJECT-' . $project->id;
+            $project->slug = 'PROJECT-'.$project->id;
             $project->saveQuietly();
 
             // attach assignees if they exist
@@ -181,6 +181,7 @@ class ProjectController extends Controller
             return to_route('projects.show-all')
                 ->with('deleted', $project);
         }
+
         return back()->with('flash', new FlashMessage('There was a problem in deleting project', '', 'danger')->toArray());
     }
 }

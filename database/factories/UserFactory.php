@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\UserRole;
+use App\Enums\UserRole;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -38,7 +38,7 @@ class UserFactory extends Factory
     public function admin(): static
     {
         return $this->state(fn (array $attributes) => [
-            'role' => UserRole::ADMIN,
+            'role' => UserRole::Admin,
         ]);
     }
 
@@ -48,7 +48,7 @@ class UserFactory extends Factory
     public function supervisor(): static
     {
         return $this->state(fn (array $attributes) => [
-            'role' => UserRole::SUPERVISOR,
+            'role' => UserRole::Supervisor,
         ]);
     }
 }

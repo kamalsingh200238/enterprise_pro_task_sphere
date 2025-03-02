@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-use App\Color;
+use App\Enums\Color;
 use App\Models\Status;
 use Illuminate\Database\Seeder;
 
@@ -17,23 +17,23 @@ class StatusSeeder extends Seeder
         $statuses = [
             [
                 'name' => 'Backlog',
-                'color' => Color::GRAY,
+                'color' => Color::Gray,
             ],
             [
                 'name' => 'In Progress',
-                'color' => Color::BLUE,
+                'color' => Color::Blue,
             ],
             [
                 'name' => 'On Hold',
-                'color' => Color::GRAY,
+                'color' => Color::Gray,
             ],
             [
                 'name' => 'In Review',
-                'color' => Color::GREEN,
+                'color' => Color::Green,
             ],
             [
                 'name' => 'Done',
-                'color' => Color::GREEN,
+                'color' => Color::Green,
             ],
         ];
 
