@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\FlashMessageType;
+use App\Enums\FlashMessageVariant;
 use App\Helpers\FlashMessage;
 use App\Http\Requests\StoreProjectRequest;
 use App\Models\Priority;
@@ -82,7 +84,13 @@ class ProjectController extends Controller
             return $project;
         });
 
-        return to_route('projects.show-all')->with('created', $project);
+        return to_route('projects.show-all')
+            ->with('flash', new FlashMessage(
+                'Created Project Successfully',
+                FlashMessageVariant::Success,
+                FlashMessageType::CreatedProject,
+                ['project' => $project]
+            )->toArray());
     }
 
     /**
@@ -139,7 +147,11 @@ class ProjectController extends Controller
         });
 
         return to_route('projects.show', $updatedProject->id)
-            ->with('flash', new FlashMessage('Project updated successfully', '', 'success')->toArray());
+            ->with('flash', new FlashMessage(
+                'Project Updated Successfully',
+                FlashMessageVariant::Success,
+                FlashMessageType::Normal,
+            )->toArray());
     }
 
     /**
@@ -167,7 +179,11 @@ class ProjectController extends Controller
         ]);
 
         return to_route('projects.show', $project->id)
-            ->with('flash', new FlashMessage('Project updated successfully', '', 'success')->toArray());
+            ->with('flash', new FlashMessage(
+                'Project Updated Successfully',
+                FlashMessageVariant::Success,
+                FlashMessageType::Normal,
+            )->toArray());
     }
 
     /**
@@ -179,9 +195,18 @@ class ProjectController extends Controller
         $deleted = $project->delete();
         if ($deleted) {
             return to_route('projects.show-all')
-                ->with('deleted', $project);
+                ->with('flash', new FlashMessage(
+                    'Project Deleted Succesfully',
+                    FlashMessageVariant::Success,
+                    FlashMessageType::Normal,
+                )->toArray());
         }
 
-        return back()->with('flash', new FlashMessage('There was a problem in deleting project', '', 'danger')->toArray());
+        return back()
+            ->with('flash', new FlashMessage(
+                'There was a problem in deleting project',
+                FlashMessageVariant::Error,
+                FlashMessageType::Normal,
+            )->toArray());
     }
 }

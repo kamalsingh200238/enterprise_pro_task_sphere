@@ -2,7 +2,7 @@
 
 namespace App\Enums;
 
-enum FlashMessageVariant
+enum FlashMessageVariant: string
 {
     case Success = 'success';
     case Error = 'error';

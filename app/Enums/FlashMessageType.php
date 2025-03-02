@@ -2,9 +2,8 @@
 
 namespace App\Enums;
 
-enum FlashMessageType
+enum FlashMessageType: string
 {
     case Normal = 'normal';
-    case CreatedProject = 'created project';
-    case DeletedProject = 'deleted project';
+    case CreatedProject = 'createdProject';
 }

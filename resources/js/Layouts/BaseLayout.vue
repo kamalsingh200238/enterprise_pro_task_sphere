@@ -1,13 +1,52 @@
 <script setup lang="ts">
 import { Toaster } from '@/Components/ui/sonner';
-import { usePage } from '@inertiajs/vue3';
+import { FlashMessage } from '@/types';
+import { router, usePage } from '@inertiajs/vue3';
 import { computed, nextTick, watch } from 'vue';
 import { toast } from 'vue-sonner';
 
 const page = usePage();
 const flash = computed(() => page.props.flash);
-const created = computed(() => page.props.created);
-const deleted = computed(() => page.props.deleted);
+
+const normalToast = (flash: FlashMessage) => {
+    switch (flash.variant) {
+        case 'success':
+            nextTick(() => {
+                toast.success(flash.heading, {
+                    description: flash.description,
+                    duration: flash.duration,
+                    closeButton: true,
+                });
+            });
+            break;
+        case 'danger':
+            nextTick(() => {
+                toast.error(flash.heading, {
+                    description: flash.description,
+                    duration: flash.duration,
+                    closeButton: true,
+                });
+            });
+            break;
+    }
+};
+
+const createdProjectToast = (flash: FlashMessage) => {
+    nextTick(() => {
+        toast.success(flash.heading, {
+            duration: flash.duration,
+            closeButton: true,
+            action: {
+                label: 'Open',
+                onClick: () => {
+                    router.get(
+                        route('projects.show', flash.context.project.id),
+                    );
+                },
+            },
+        });
+    });
+};
 
 watch(
     flash,
@@ -16,58 +55,14 @@ watch(
             return;
         }
 
-        switch (newValue.variant) {
-            case 'success':
-                nextTick(() => {
-                    toast.success(newValue.heading, {
-                        description: newValue.description,
-                        duration: newValue.duraton,
-                        closeButton: true,
-                    });
-                });
+        switch (newValue.messageType) {
+            case 'normal':
+                normalToast(newValue);
                 break;
-            case 'danger':
-                nextTick(() => {
-                    toast.error(newValue.heading, {
-                        description: newValue.description,
-                        duration: newValue.duraton,
-                        closeButton: true,
-                    });
-                });
+            case 'createdProject':
+                createdProjectToast(newValue);
                 break;
         }
-    },
-    { immediate: true },
-);
-
-watch(
-    created,
-    (newValue) => {
-        if (!newValue) {
-            return;
-        }
-        nextTick(() => {
-            toast.success('Created project successfully', {
-                duration: 10000,
-                closeButton: true,
-            });
-        });
-    },
-    { immediate: true },
-);
-
-watch(
-    deleted,
-    (newValue) => {
-        if (!newValue) {
-            return;
-        }
-        nextTick(() => {
-            toast.error('Deleted project successfully', {
-                duration: 10000,
-                closeButton: true,
-            });
-        });
     },
     { immediate: true },
 );

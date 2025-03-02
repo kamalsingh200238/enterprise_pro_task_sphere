@@ -23,9 +23,9 @@ class FlashMessage
         string $heading,
         FlashMessageVariant $variant = FlashMessageVariant::Info,
         FlashMessageType $messageType = FlashMessageType::Normal,
-        string $description = '',
-        int $duration = 10000,
         array $context = [],
+        int $duration = 10000,
+        string $description = '',
     ) {
         $this->messageType = $messageType;
         $this->description = $description;

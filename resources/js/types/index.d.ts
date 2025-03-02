@@ -11,15 +11,19 @@ export type PageProps<
         user: User;
     };
     flash: FlashMessage;
-    created: Project;
-    deleted: Project;
 };
 
 export interface FlashMessage {
+    messageType: 'normal' | 'createdProject';
     heading: string;
     description: string;
-    variant: 'success' | 'danger';
-    duraton: number;
+    variant: 'success' | 'danger' | 'info' | 'warning';
+    duration: number;
+    context: FlashMessageContext;
+}
+
+export interface FlashMessageContext {
+    project: Project;
 }
 
 export interface Project {
