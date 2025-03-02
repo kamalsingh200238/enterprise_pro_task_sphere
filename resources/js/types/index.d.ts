@@ -23,7 +23,7 @@ export interface FlashMessage {
 }
 
 export interface FlashMessageContext {
-    project: Project;
+    project?: Project;
 }
 
 export interface Project {
