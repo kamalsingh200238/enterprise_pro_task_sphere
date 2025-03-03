@@ -70,4 +70,10 @@ class ProjectPolicy
     {
         return $user->hasRole(UserRole::Admin);
     }
+
+    public function createComment(User $user, Project $project)
+    {
+        return $user->hasRole([UserRole::Admin, UserRole::Supervisor]) ||
+            $project->assignees->contains($user->id);
+    }
 }
