@@ -2,14 +2,23 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Task extends Model
 {
-    use HasFactory, SoftDeletes;
+    // add soft delete trait
+    use SoftDeletes;
 
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var list<string>
+     */
     protected $fillable = [
         'project_id',
         'name',
@@ -24,6 +33,11 @@ class Task extends Model
         'supervisor_id',
     ];
 
+    /**
+     * Get the attributes that should be cast.
+     *
+     * @return array<string, string>
+     */
     protected $casts = [
         'start_date' => 'datetime',
         'due_date' => 'datetime',
@@ -32,43 +46,83 @@ class Task extends Model
         'updated_at' => 'datetime',
     ];
 
-    public function parent()
+    /**
+     * Get the project which is parent to task
+     */
+    public function parent(): BelongsTo
     {
         return $this->belongsTo(Project::class);
     }
 
-    public function status()
+    /**
+     * Get status associated to task
+     */
+    public function status(): BelongsTo
     {
         return $this->belongsTo(Status::class);
     }
 
-    public function priority()
+    /**
+     * Get priority associated to task
+     */
+    public function priority(): BelongsTo
     {
         return $this->belongsTo(Priority::class);
     }
 
-    public function createdBy()
+    /**
+     * Get user who created the task
+     */
+    public function createdBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
     }
 
-    public function updatedBy()
+    /**
+     * Get user who last updated the task
+     */
+    public function updatedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'updated_by');
     }
 
-    public function supervisor()
+    /**
+     * Get the supervisor of the task
+     */
+    public function supervisor(): BelongsTo
     {
         return $this->belongsTo(User::class, 'supervisor_id');
     }
 
-    public function assignees()
+    /**
+     * Get the assignees of the task
+     */
+    public function assignees(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'task_assignees');
     }
 
-    public function viewers()
+    /**
+     * Get the viewers of the task
+     */
+    public function viewers(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'task_viewers');
+    }
+
+    /**
+     * Get the sub-task of the task
+     */
+    public function subTasks(): HasMany
+    {
+        return $this->hasMany(SubTask::class);
+    }
+
+    /**
+     * Get the comments of the task
+     */
+    public function comments(): MorphMany
+    {
+        return $this->morphMany(Comment::class, 'commentable');
     }
 }
