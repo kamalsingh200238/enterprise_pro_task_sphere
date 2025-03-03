@@ -43,7 +43,7 @@ class ProjectController extends Controller
             'statuses' => Status::all(),
             'priorities' => Priority::all(),
             'users' => User::all(),
-            'supervisorsAndAdmins' => User::getAllSupervisorAndAdmins(),
+            'supervisorsAndAdmins' => User::getAllSupervisorsAndAdmins(),
         ]);
     }
 
@@ -112,7 +112,7 @@ class ProjectController extends Controller
             'statuses' => Status::all(),
             'priorities' => Priority::all(),
             'users' => User::all(),
-            'supervisorsAndAdmins' => User::getAllSupervisorAndAdmins(),
+            'supervisorsAndAdmins' => User::getAllSupervisorsAndAdmins(),
         ]);
     }
 
