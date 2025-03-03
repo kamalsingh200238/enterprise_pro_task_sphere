@@ -209,4 +209,18 @@ class ProjectController extends Controller
                 FlashMessageType::Normal,
             )->toArray());
     }
+
+    public function createComment(Request $request, Project $project)
+    {
+        Gate::authorize('createComment', $project);
+        $validated = $request->validate([
+            'content' => ['required'],
+        ]);
+        $project->comments()->create([
+            'content' => $validated['content'],
+            'user_id' => auth()->id(),
+        ]);
+
+        return to_route('projects.show', $project);
+    }
 }
