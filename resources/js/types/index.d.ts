@@ -56,3 +56,9 @@ export interface Priority {
     created_at: string;
     updated_at: string;
 }
+
+export interface Comment {
+    id: string;
+    content: string;
+    user: User;
+}
