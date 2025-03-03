@@ -2,14 +2,22 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Project extends Model
 {
+    // add soft delete trait
     use SoftDeletes;
 
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var list<string>
+     */
     protected $fillable = [
         'name',
         'description',
@@ -23,6 +31,11 @@ class Project extends Model
         'supervisor_id',
     ];
 
+    /**
+     * The attributes that should be hidden for serialization.
+     *
+     * @var list<string>
+     */
     protected $casts = [
         'start_date' => 'datetime',
         'due_date' => 'datetime',
@@ -31,41 +44,73 @@ class Project extends Model
         'updated_at' => 'datetime',
     ];
 
-    public function status()
+    /**
+     * Get status associated to project
+     */
+    public function status(): BelongsTo
     {
         return $this->belongsTo(Status::class);
     }
 
-    public function priority()
+    /**
+     * Get priority associated to project
+     */
+    public function priority(): BelongsTo
     {
         return $this->belongsTo(Priority::class);
     }
 
-    public function createdBy()
+    /**
+     * Get user who created the project
+     */
+    public function createdBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
     }
 
-    public function updatedBy()
+    /**
+     * Get user who last updated the project
+     */
+    public function updatedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'updated_by');
     }
 
-    public function supervisor()
+    /**
+     * Get the supervisor of the project
+     */
+    public function supervisor(): BelongsTo
     {
         return $this->belongsTo(User::class, 'supervisor_id');
     }
 
-    public function assignees()
+    /**
+     * Get the assignees of the project
+     */
+    public function assignees(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'project_assignees');
     }
 
-    public function viewers()
+    /**
+     * Get the viewers of the project
+     */
+    public function viewers(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'project_viewers');
     }
 
+    /**
+     * Get the tasks of the project
+     */
+    public function tasks(): HasMany
+    {
+        return $this->hasMany(Task::class);
+    }
+
+    /**
+     * Get the comments of the project
+     */
     public function comments()
     {
         return $this->morphMany(Comment::class, 'commentable');
