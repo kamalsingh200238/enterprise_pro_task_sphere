@@ -24,6 +24,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/projects/{id}', [ProjectController::class, 'show'])->name('projects.show');
     Route::put('/projects/{project}', [ProjectController::class, 'edit'])->name('projects.edit');
     Route::delete('/projects/{project}', [ProjectController::class, 'delete'])->name('projects.delete');
+    Route::post('/projects/{project}/comment', [ProjectController::class, 'createComment'])->name('projects.add-comment');
 });
 
 require __DIR__.'/auth.php';
