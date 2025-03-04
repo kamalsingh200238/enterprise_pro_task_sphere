@@ -16,6 +16,7 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from '@/Components/ui/alert-dialog';
+import { Avatar, AvatarFallback } from '@/Components/ui/avatar';
 import { Button } from '@/Components/ui/button';
 import { Checkbox } from '@/Components/ui/checkbox';
 import { Input } from '@/Components/ui/input';
@@ -23,8 +24,10 @@ import { Label } from '@/Components/ui/label';
 import { Textarea } from '@/Components/ui/textarea';
 import ViewerSelector from '@/Components/ViewerSelector.vue';
 import BaseLayout from '@/Layouts/BaseLayout.vue';
-import { Priority, Project, Status, User } from '@/types';
+import { getInitials } from '@/lib/getIntials';
+import { Comment, Priority, Project, Status, User } from '@/types';
 import { Link, router, useForm } from '@inertiajs/vue3';
+import { format, parseISO } from 'date-fns';
 import { ref } from 'vue';
 
 interface Props {
@@ -32,19 +35,19 @@ interface Props {
         edit: boolean;
         updateStatus: boolean;
         updateStatusToDone: boolean;
+        deleteComment: boolean;
     };
     project: Project;
     statuses: Status[];
     priorities: Priority[];
     users: User[];
     supervisorsAndAdmins: User[];
+    comments: Comment[];
 }
 
 const props = defineProps<Props>();
 const isEditMode = ref(false);
-const isConfirmModalVisible = ref(false);
 
-console.log(props)
 const form = useForm({
     name: props.project.name,
     description: props.project.description,
@@ -56,6 +59,10 @@ const form = useForm({
     supervisor_id: props.project.supervisor.id,
     assignees: props.project.assignees.map((user) => user.id),
     viewers: props.project.viewers.map((user) => user.id),
+});
+
+const commentForm = useForm({
+    content: '',
 });
 
 const submitEdit = () => {
@@ -78,8 +85,15 @@ const toggleStatus = () => {
     }
 };
 
-const deleteProject = () => {
-    isConfirmModalVisible.value = true;
+// Submit comment
+const submitComment = () => {
+    commentForm.post(route('projects.add-comment', props.project.id), {
+        onSuccess: () => {
+            // Reset form after successful submission
+            commentForm.content = '';
+        },
+        preserveScroll: true,
+    });
 };
 </script>
 
@@ -88,20 +102,67 @@ const deleteProject = () => {
         <main class="mx-auto max-w-7xl p-8">
             <div class="mb-6 flex items-center justify-between">
                 <h1 class="text-2xl font-bold">{{ project.slug }}</h1>
-                <Button
-                    v-if="!isEditMode && props.can.edit"
-                    @click="isEditMode = true"
-                >
-                    Edit Project
-                </Button>
-                <Button v-if="isEditMode" as-child>
-                    <Link :href="route('projects.show', project.id)">
-                        Cancel
-                    </Link>
-                </Button>
+                <div>
+                    <Button
+                        v-if="!isEditMode && props.can.edit"
+                        @click="isEditMode = true"
+                    >
+                        Edit Project
+                    </Button>
+                    <Button
+                        form="edit-form"
+                        v-if="isEditMode"
+                        type="submit"
+                        :disabled="form.processing"
+                    >
+                        Save Changes
+                    </Button>
+                    <Button v-if="isEditMode" as-child>
+                        <Link :href="route('projects.show', project.id)">
+                            Cancel
+                        </Link>
+                    </Button>
+                    <AlertDialog>
+                        <AlertDialogTrigger as-child>
+                            <Button variant="destructive"> Delete </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                            <AlertDialogHeader>
+                                <AlertDialogTitle>
+                                    Are you absolutely sure?
+                                </AlertDialogTitle>
+                                <AlertDialogDescription>
+                                    This action cannot be undone. This will
+                                    permanently delete your account and remove
+                                    your data from our servers.
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction as-child>
+                                    <Button as-child>
+                                        <Link
+                                            method="delete"
+                                            :href="
+                                                route(
+                                                    'projects.delete',
+                                                    props.project.id,
+                                                )
+                                            "
+                                        >
+                                            Confirm
+                                        </Link>
+                                    </Button>
+                                </AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
+                </div>
             </div>
-
-            <form @submit.prevent="isEditMode ? submitEdit() : null">
+            <form
+                id="edit-form"
+                @submit.prevent="isEditMode ? submitEdit() : null"
+            >
                 <div class="grid gap-8 lg:grid-cols-3">
                     <div class="col-span-2 space-y-6">
                         <div>
@@ -123,6 +184,119 @@ const deleteProject = () => {
                                 :disabled="!isEditMode"
                             />
                             <FormError :err="form.errors.description" />
+                        </div>
+                        <form @submit.prevent="submitComment" class="mb-6">
+                            <div class="space-y-3">
+                                <Textarea
+                                    id="update-content"
+                                    v-model="commentForm.content"
+                                    placeholder="Add a project update..."
+                                    rows="3"
+                                />
+                                <FormError :err="commentForm.errors.content" />
+                                <div class="flex justify-end">
+                                    <Button
+                                        type="submit"
+                                        :disabled="
+                                            commentForm.processing ||
+                                            !commentForm.content
+                                        "
+                                    >
+                                        Post Update
+                                    </Button>
+                                </div>
+                            </div>
+                        </form>
+                        <div class="space-y-4">
+                            <div
+                                v-if="
+                                    !props.comments ||
+                                    props.comments.length === 0
+                                "
+                                class="py-4 text-center text-muted-foreground"
+                            >
+                                No updates yet. Be the first to add an update!
+                            </div>
+
+                            <div
+                                v-for="comment in props.comments"
+                                :key="comment.id"
+                                class="rounded-md border p-4"
+                            >
+                                <div class="flex items-start gap-3">
+                                    <Avatar>
+                                        <AvatarFallback>{{
+                                            getInitials(comment.user.name)
+                                        }}</AvatarFallback>
+                                    </Avatar>
+                                    <div class="flex-1">
+                                        <div
+                                            class="flex flex-col sm:flex-row sm:items-center sm:justify-between"
+                                        >
+                                            <div class="font-medium">
+                                                {{ comment.user.name }}
+                                            </div>
+                                            <div
+                                                class="text-sm text-muted-foreground"
+                                            >
+                                                {{
+                                                    format(
+                                                        parseISO(
+                                                            comment.created_at,
+                                                        ),
+                                                        'EEEE, MMMM do yyyy, h:mm a',
+                                                    )
+                                                }}
+                                            </div>
+                                        </div>
+                                        <div class="mt-2 text-sm">
+                                            {{ comment.content }}
+                                        </div>
+                                    </div>
+                                </div>
+                                <AlertDialog>
+                                    <AlertDialogTrigger as-child>
+                                        <Button variant="destructive">
+                                            Delete
+                                        </Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                        <AlertDialogHeader>
+                                            <AlertDialogTitle>
+                                                Are you absolutely sure?
+                                            </AlertDialogTitle>
+                                            <AlertDialogDescription>
+                                                This action cannot be undone.
+                                                This will permanently delete the
+                                                comment.
+                                            </AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <AlertDialogFooter>
+                                            <AlertDialogCancel
+                                                >Cancel</AlertDialogCancel
+                                            >
+                                            <AlertDialogAction as-child>
+                                                <Button
+                                                    as-child
+                                                    variant="destructive"
+                                                >
+                                                    <Link
+                                                        :href="
+                                                            route(
+                                                                'comments.delete',
+                                                                comment.id,
+                                                            )
+                                                        "
+                                                        preserve-scroll
+                                                        method="delete"
+                                                        >Delete comment</Link
+                                                    >
+                                                </Button>
+                                            </AlertDialogAction>
+                                        </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                </AlertDialog>
+                            </div>
                         </div>
                     </div>
                     <div class="space-y-6">
@@ -237,54 +411,8 @@ const deleteProject = () => {
                         </div>
                     </div>
                 </div>
-
-                <div class="mt-6">
-                    <Button
-                        v-if="isEditMode"
-                        type="submit"
-                        :disabled="form.processing"
-                    >
-                        Save Changes
-                    </Button>
-                </div>
             </form>
-            <AlertDialog v-model:open="isConfirmModalVisible">
-                <AlertDialogTrigger as-child>
-                    <Button variant="destructive" @click="deleteProject">
-                        Delete
-                    </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>
-                            Are you absolutely sure?
-                        </AlertDialogTitle>
-                        <AlertDialogDescription>
-                            This action cannot be undone. This will permanently
-                            delete your account and remove your data from our
-                            servers.
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction as-child>
-                            <Button as-child>
-                                <Link
-                                    method="delete"
-                                    :href="
-                                        route(
-                                            'projects.delete',
-                                            props.project.id,
-                                        )
-                                    "
-                                >
-                                    Confirm
-                                </Link>
-                            </Button>
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
+            <div></div>
         </main>
     </BaseLayout>
 </template>
