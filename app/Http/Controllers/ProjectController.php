@@ -18,7 +18,7 @@ use Inertia\Inertia;
 class ProjectController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Display all projects
      */
     public function index()
     {
@@ -43,12 +43,12 @@ class ProjectController extends Controller
             'statuses' => Status::all(),
             'priorities' => Priority::all(),
             'users' => User::all(),
-            'supervisorsAndAdmins' => User::getAllSupervisorsAndAdmins(),
+            'supervisorsAndAdmins' => User::getAllSupervisorsAndAdmins()->get(),
         ]);
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Create a new project in database
      */
     public function store(StoreProjectRequest $request)
     {
@@ -58,7 +58,9 @@ class ProjectController extends Controller
         // get the validated data from request
         $validated = $request->validated();
 
+        // use db transaction to create an app
         $project = DB::transaction(function () use ($validated) {
+            // create a new project
             $project = Project::create(
                 [
                     ...$validated,
@@ -67,6 +69,7 @@ class ProjectController extends Controller
                 ]
             );
 
+            // add slug in the project
             $project->slug = 'PROJECT-'.$project->id;
             $project->saveQuietly();
 
@@ -84,6 +87,7 @@ class ProjectController extends Controller
             return $project;
         });
 
+        // return to show all page with a success flash message
         return to_route('projects.show-all')
             ->with('flash', new FlashMessage(
                 'Created Project Successfully',
@@ -94,14 +98,17 @@ class ProjectController extends Controller
     }
 
     /**
-     * Display the specified resource.
+     * Display a project
      */
     public function show(int $id)
     {
-        $project = Project::with(['assignees:id', 'viewers:id'])->findOrFail($id);
+        // fetch project with assignees and viewers
+        $project = Project::with(['status:id', 'priority:id', 'supervisor:id', 'assignees:id', 'viewers:id'])->findOrFail($id);
 
+        // check if user can view the project
         Gate::authorize('view', arguments: $project);
 
+        // show the project
         return Inertia::render('Project/ShowProject', [
             'can' => [
                 'edit' => auth()->user()->can('edit', $project),
@@ -112,20 +119,22 @@ class ProjectController extends Controller
             'statuses' => Status::all(),
             'priorities' => Priority::all(),
             'users' => User::all(),
-            'supervisorsAndAdmins' => User::getAllSupervisorsAndAdmins(),
+            'supervisorsAndAdmins' => User::getAllSupervisorsAndAdmins()->get(),
         ]);
     }
 
     /**
-     * Show the form for editing the specified resource.
+     *  Edit a project
      */
     public function edit(StoreProjectRequest $request, Project $project)
     {
+        // check if user can edit project
         Gate::authorize('edit', $project);
 
         // Get validated data
         $validated = $request->validated();
 
+        // use db transaction
         $updatedProject = DB::transaction(function () use ($validated, $project) {
             // Update the project with validated data
             $project->update([
@@ -146,6 +155,7 @@ class ProjectController extends Controller
             return $project;
         });
 
+        // redirect to show page with flash message
         return to_route('projects.show', $updatedProject->id)
             ->with('flash', new FlashMessage(
                 'Project Updated Successfully',
@@ -155,10 +165,11 @@ class ProjectController extends Controller
     }
 
     /**
-     * Update the specified resource in storage.
+     * Update status of the project
      */
     public function updateStatus(Request $request, Project $project)
     {
+        // check if user can update status of project
         Gate::authorize('updateStatus', $project);
 
         // Validate the incoming request data
@@ -166,10 +177,12 @@ class ProjectController extends Controller
             'status_id' => ['required', 'exists:statuses,id'],
         ]);
 
+        // get the name of done status
         $doneStatusId = Status::where('name', 'Done')->first()->id;
 
         // Check if user is trying to set status to "done"
         if ($validated['status_id'] == $doneStatusId) {
+            // check if user can update status to done
             Gate::authorize('updateStatusToDone', $project);
         }
 
@@ -178,6 +191,7 @@ class ProjectController extends Controller
             'status_id' => $validated['status_id'],
         ]);
 
+        // redirect to show page with flash message
         return to_route('projects.show', $project->id)
             ->with('flash', new FlashMessage(
                 'Project Updated Successfully',
@@ -187,13 +201,19 @@ class ProjectController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Delete a project
      */
     public function delete(Project $project)
     {
+        // check if user can delete the project
         Gate::authorize('delete', $project);
+
+        // delete the project
         $deleted = $project->delete();
+
+        // if project deleted
         if ($deleted) {
+            // redirect to show all page with success message
             return to_route('projects.show-all')
                 ->with('flash', new FlashMessage(
                     'Project Deleted Succesfully',
@@ -202,6 +222,7 @@ class ProjectController extends Controller
                 )->toArray());
         }
 
+        // if not deleted then send back with flash message
         return back()
             ->with('flash', new FlashMessage(
                 'There was a problem in deleting project',
@@ -210,17 +231,26 @@ class ProjectController extends Controller
             )->toArray());
     }
 
+    /**
+     * Add a comment in project
+     */
     public function createComment(Request $request, Project $project)
     {
+        // check if user can create comment in project
         Gate::authorize('createComment', $project);
+
+        // validate the incoming request
         $validated = $request->validate([
             'content' => ['required'],
         ]);
+
+        // create a comment
         $project->comments()->create([
             'content' => $validated['content'],
             'user_id' => auth()->id(),
         ]);
 
+        // redirect to show page
         return to_route('projects.show', $project);
     }
 }
