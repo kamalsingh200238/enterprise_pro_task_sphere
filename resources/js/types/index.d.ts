@@ -33,12 +33,15 @@ export interface Project {
     description: string;
     start_date: string;
     due_date: string;
-    status_id: number;
-    priority_id: number;
+    status: Status;
+    priority: Priority;
     is_private: boolean;
-    supervisor_id: number;
+    supervisor: User;
     assignees: User[];
     viewers: User[];
+    updated_by: User;
+    created_at: string;
+    updated_at: string;
 }
 
 export interface Status {
@@ -61,4 +64,6 @@ export interface Comment {
     id: string;
     content: string;
     user: User;
+    created_at: string;
+    updated_at: string;
 }
