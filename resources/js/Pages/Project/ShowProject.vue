@@ -44,15 +44,16 @@ const props = defineProps<Props>();
 const isEditMode = ref(false);
 const isConfirmModalVisible = ref(false);
 
+console.log(props)
 const form = useForm({
     name: props.project.name,
     description: props.project.description,
     start_date: props.project.start_date,
     due_date: props.project.due_date,
-    status_id: props.project.status_id,
-    priority_id: props.project.priority_id,
+    status_id: props.project.status.id,
+    priority_id: props.project.priority.id,
     is_private: props.project.is_private,
-    supervisor_id: props.project.supervisor_id,
+    supervisor_id: props.project.supervisor.id,
     assignees: props.project.assignees.map((user) => user.id),
     viewers: props.project.viewers.map((user) => user.id),
 });
