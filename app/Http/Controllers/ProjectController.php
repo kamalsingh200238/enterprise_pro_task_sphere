@@ -6,6 +6,7 @@ use App\Enums\FlashMessageType;
 use App\Enums\FlashMessageVariant;
 use App\Helpers\FlashMessage;
 use App\Http\Requests\StoreProjectRequest;
+use App\Models\Comment;
 use App\Models\Priority;
 use App\Models\Project;
 use App\Models\Status;
@@ -103,10 +104,18 @@ class ProjectController extends Controller
     public function show(int $id)
     {
         // fetch project with assignees and viewers
-        $project = Project::with(['status:id', 'priority:id', 'supervisor:id', 'assignees:id', 'viewers:id'])->findOrFail($id);
+        $project = Project::with([
+            'status:id',
+            'priority:id',
+            'supervisor:id',
+            'assignees:id',
+            'viewers:id',
+        ])->findOrFail($id);
 
         // check if user can view the project
         Gate::authorize('view', arguments: $project);
+
+        $comments = $project->comments()->latest()->with('user', 'commentable')->get();
 
         // show the project
         return Inertia::render('Project/ShowProject', [
@@ -114,12 +123,14 @@ class ProjectController extends Controller
                 'edit' => auth()->user()->can('edit', $project),
                 'updateStatus' => auth()->user()->can('updateStatus', $project),
                 'updateStatusToDone' => auth()->user()->can('updateStatusToDone', Project::class),
+                'deleteComment' => auth()->user()->can('delete', Comment::class),
             ],
             'project' => $project,
             'statuses' => Status::all(),
             'priorities' => Priority::all(),
             'users' => User::all(),
             'supervisorsAndAdmins' => User::getAllSupervisorsAndAdmins()->get(),
+            'comments' => $comments,
         ]);
     }
 
@@ -241,7 +252,7 @@ class ProjectController extends Controller
 
         // validate the incoming request
         $validated = $request->validate([
-            'content' => ['required'],
+            'content' => ['required', 'min:3'],
         ]);
 
         // create a comment
