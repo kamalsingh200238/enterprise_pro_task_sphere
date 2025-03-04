@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CommentController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProjectController;
 use Illuminate\Support\Facades\Route;
@@ -25,6 +26,8 @@ Route::middleware('auth')->group(function () {
     Route::put('/projects/{project}', [ProjectController::class, 'edit'])->name('projects.edit');
     Route::delete('/projects/{project}', [ProjectController::class, 'delete'])->name('projects.delete');
     Route::post('/projects/{project}/comment', [ProjectController::class, 'createComment'])->name('projects.add-comment');
+
+    Route::delete('/comments/{comment}', [CommentController::class, 'delete'])->name('comments.delete');
 });
 
 require __DIR__.'/auth.php';
