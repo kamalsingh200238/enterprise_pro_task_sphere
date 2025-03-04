@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { statusIcons } from '@/lib/StatusIcons';
+import { statusIcons } from '@/lib/statusIcons';
 import type { Status } from '@/types';
 import { computed } from 'vue';
 import {

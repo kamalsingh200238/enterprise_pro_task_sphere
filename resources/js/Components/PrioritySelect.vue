@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { priorityIcons } from '@/lib/PriorityIcons';
+import { priorityIcons } from '@/lib/priorityIcons';
 import type { Priority } from '@/types';
 import { computed } from 'vue';
 import {
