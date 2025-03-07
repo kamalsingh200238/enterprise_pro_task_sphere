@@ -1,17 +1,16 @@
 <script setup lang="ts">
-import AssigneeSelector from '@/Components/AssigneeSelector.vue';
-import DatePicker from '@/Components/DatePicker.vue';
-import FormError from '@/Components/FormError.vue';
-import PrioritySelect from '@/Components/PrioritySelect.vue';
-import StatusSelect from '@/Components/StatusSelect.vue';
-import SupervisorSelect from '@/Components/SupervisorSelect.vue';
-import { Button } from '@/Components/ui/button';
-import { Checkbox } from '@/Components/ui/checkbox';
-import { Input } from '@/Components/ui/input';
-import { Label } from '@/Components/ui/label';
-import { Textarea } from '@/Components/ui/textarea';
-import ViewerSelector from '@/Components/ViewerSelector.vue';
-import BaseLayout from '@/Layouts/BaseLayout.vue';
+import AssigneeSelector from '@/components/AssigneeSelector.vue';
+import DatePicker from '@/components/DatePicker.vue';
+import FormError from '@/components/FormError.vue';
+import PrioritySelect from '@/components/PrioritySelect.vue';
+import StatusSelect from '@/components/StatusSelect.vue';
+import SupervisorSelect from '@/components/SupervisorSelect.vue';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import ViewerSelector from '@/components/ViewerSelector.vue';
 import { Priority, Status, User } from '@/types';
 import { Head, useForm } from '@inertiajs/vue3';
 
@@ -67,7 +66,7 @@ const submit = () => {
 
 <template>
     <Head title="Create New Project" />
-    <BaseLayout>
+    <!-- <BaseLayout> -->
         <main class="mx-auto max-w-7xl p-8">
             <form @submit.prevent="submit">
                 <div class="grid gap-8 lg:grid-cols-3">
@@ -197,5 +196,5 @@ const submit = () => {
                 </Button>
             </form>
         </main>
-    </BaseLayout>
+    <!-- </BaseLayout> -->
 </template>
