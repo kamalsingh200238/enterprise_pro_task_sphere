@@ -3,13 +3,22 @@
 namespace App\Policies;
 
 use App\Enums\UserRole;
+use App\Models\Project;
 use App\Models\Task;
 use App\Models\User;
 
 class TaskPolicy
 {
     /**
-     * Determine whether the user can view the model.
+     * Check if user can view all the tasks. (admin, supervisor)
+     */
+    public function viewAll(User $user): bool
+    {
+        return $user->hasRole([UserRole::Admin, UserRole::Supervisor]);
+    }
+
+    /**
+     * Check if user can view the task. (admin, supervisor, assignee)
      */
     public function view(User $user, Task $task): bool
     {
@@ -23,7 +32,7 @@ class TaskPolicy
     }
 
     /**
-     * Determine whether the user can create models.
+     * Check if user can create task. (admin, supervisor)
      */
     public function create(User $user): bool
     {
@@ -31,7 +40,7 @@ class TaskPolicy
     }
 
     /**
-     * Determine whether the user can edit the model.
+     * Check if user can edit task. (admin, supervisor)
      */
     public function edit(User $user): bool
     {
@@ -39,19 +48,36 @@ class TaskPolicy
     }
 
     /**
-     * Determine whether the user can update the status and priority.
+     * Check if user can update status of task. (admin, supervisor, assignee)
      */
-    public function updateStatusAndPriority(User $user, Task $task)
+    public function updateStatus(User $user, Task $task)
     {
         return $user->hasRole([UserRole::Admin, UserRole::Supervisor]) ||
             $task->assignees->contains($user->id);
     }
 
     /**
-     * Determine whether the user can delete the model.
+     * Check if user can update status of task to done. (admin, supervisor)
+     */
+    public function updateStatusToDone(User $user)
+    {
+        return $user->hasRole([UserRole::Admin, UserRole::Supervisor]);
+    }
+
+    /**
+     * Check if user can delete task. (admin)
      */
     public function delete(User $user): bool
     {
         return $user->hasRole(UserRole::Admin);
+    }
+
+    /**
+     * Check if user can create comment in task. (admin, supervisor, assignee)
+     */
+    public function createComment(User $user, Project $project)
+    {
+        return $user->hasRole([UserRole::Admin, UserRole::Supervisor]) ||
+            $project->assignees->contains($user->id);
     }
 }
