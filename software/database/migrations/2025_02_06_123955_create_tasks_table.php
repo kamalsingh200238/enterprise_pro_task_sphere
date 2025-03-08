@@ -17,7 +17,7 @@ return new class extends Migration
             $table->id();
 
             $table->string('name');
-            $table->string('slug')->unique();
+            $table->string('slug')->unique()->default('');
             $table->text('description')->nullable();
 
             $table->dateTimeTz('start_date');

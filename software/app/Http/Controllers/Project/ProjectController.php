@@ -60,7 +60,7 @@ class ProjectController extends Controller
         // get the validated data from request
         $validated = $request->validated();
 
-        // use db transaction to create an app
+        // use db transaction to create a project
         $project = DB::transaction(function () use ($validated) {
             // create a new project
             $project = Project::create(

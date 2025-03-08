@@ -1,6 +1,8 @@
 <?php
 
+use App\Http\Controllers\Comment\CommentController;
 use App\Http\Controllers\Project\ProjectController;
+use App\Http\Controllers\Task\TaskController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -24,6 +26,10 @@ Route::middleware('auth')->group(function () {
     Route::post('/projects/{project}/comment', [ProjectController::class, 'createComment'])->name('projects.add-comment');
 
     Route::delete('/comments/{comment}', [CommentController::class, 'delete'])->name('comments.delete');
+
+    Route::get('/tasks', [TaskController::class, 'index'])->name('tasks.show-all');
+    Route::get('/tasks/new', [TaskController::class, 'create'])->name('tasks.create');
+    Route::post('/tasks', [TaskController::class, 'store'])->name('tasks.store');
 });
 
 require __DIR__ . '/settings.php';
