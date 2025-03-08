@@ -31,7 +31,6 @@ export interface User {
     name: string;
     email: string;
     avatar?: string;
-    email_verified_at: string | null;
     created_at: string;
     updated_at: string;
 }
@@ -59,13 +58,16 @@ export interface Project {
     description: string;
     start_date: string;
     due_date: string;
-    status: Status;
-    priority: Priority;
+    status_id: number;
+    status?: Status;
+    priority_id: number;
+    priority?: Priority;
     is_private: boolean;
-    supervisor: User;
+    supervisor_id: number;
+    supervisor?: User;
     assignees: User[];
     viewers: User[];
-    updated_by: User;
+    updated_by: number;
     created_at: string;
     updated_at: string;
 }
@@ -78,13 +80,16 @@ export interface Task {
     description: string;
     start_date: string;
     due_date: string;
-    status: Status;
-    priority: Priority;
+    status_id: number;
+    status?: Status;
+    priority_id: number;
+    priority?: Priority;
     is_private: boolean;
-    supervisor: User;
+    supervisor_id: number;
+    supervisor?: User;
     assignees: User[];
     viewers: User[];
-    updated_by: User;
+    updated_by: number;
     created_at: string;
     updated_at: string;
 }
