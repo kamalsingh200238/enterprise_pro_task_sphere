@@ -48,9 +48,7 @@ const createdProjectToast = (flash: FlashMessage) => {
             action: {
                 label: 'Open',
                 onClick: () => {
-                    router.get(
-                        route('projects.show', flash.context.project?.id),
-                    );
+                    router.get(route('projects.show', flash.context.project?.id));
                 },
             },
         });
@@ -65,9 +63,7 @@ const createdTaskToast = (flash: FlashMessage) => {
             action: {
                 label: 'Open',
                 onClick: () => {
-                    router.get(
-                        route('tasks.show', flash.context.task?.id),
-                    );
+                    router.get(route('tasks.show', flash.context.task?.id));
                 },
             },
         });
@@ -93,7 +89,7 @@ watch(
         }
     },
     { immediate: true },
-)
+);
 </script>
 
 <template>
