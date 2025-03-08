@@ -48,8 +48,6 @@ interface Props {
 const props = defineProps<Props>();
 const isEditMode = ref(false);
 
-console.log(props);
-
 const form = useForm({
     name: props.project.name,
     description: props.project.description,
