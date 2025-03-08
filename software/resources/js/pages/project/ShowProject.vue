@@ -23,8 +23,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import ViewerSelector from '@/components/ViewerSelector.vue';
+import { useInitials } from '@/composables/useInitials';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { getInitials } from '@/lib/getIntials';
 import { Comment, Priority, Project, Status, User } from '@/types';
 import { Link, router, useForm } from '@inertiajs/vue3';
 import { format, parseISO } from 'date-fns';
@@ -95,6 +95,8 @@ const submitComment = () => {
         preserveScroll: true,
     });
 };
+
+const { getInitials } = useInitials();
 </script>
 
 <template>
