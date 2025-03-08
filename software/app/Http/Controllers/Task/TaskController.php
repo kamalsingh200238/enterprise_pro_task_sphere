@@ -2,19 +2,19 @@
 
 namespace App\Http\Controllers\Task;
 
-use App\Http\Controllers\Controller;
-use App\Enums\FlashMessageVariant;
 use App\Enums\FlashMessageType;
+use App\Enums\FlashMessageVariant;
 use App\Helpers\FlashMessage;
+use App\Http\Controllers\Controller;
 use App\Http\Requests\Task\StoreTaskRequest;
-use App\Models\Task;
 use App\Models\Priority;
 use App\Models\Project;
 use App\Models\Status;
+use App\Models\Task;
 use App\Models\User;
-use Inertia\Inertia;
-use Gate;
 use DB;
+use Gate;
+use Inertia\Inertia;
 
 class TaskController extends Controller
 {
@@ -72,7 +72,7 @@ class TaskController extends Controller
             );
 
             // add slug in the project
-            $task->slug = 'TASK-' . $task->id;
+            $task->slug = 'TASK-'.$task->id;
             $task->saveQuietly();
 
             // attach assignees if they exist
