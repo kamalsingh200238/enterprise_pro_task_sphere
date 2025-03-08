@@ -106,9 +106,6 @@ class ProjectController extends Controller
     {
         // fetch project with assignees and viewers
         $project = Project::with([
-            'status:id',
-            'priority:id',
-            'supervisor:id',
             'assignees:id',
             'viewers:id',
         ])->findOrFail($id);
