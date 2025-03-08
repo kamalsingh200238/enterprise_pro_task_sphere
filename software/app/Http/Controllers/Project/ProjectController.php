@@ -2,20 +2,20 @@
 
 namespace App\Http\Controllers\Project;
 
-use App\Http\Requests\Project\StoreProjectRequest;
-use App\Http\Controllers\Controller;
-use App\Enums\FlashMessageVariant;
 use App\Enums\FlashMessageType;
+use App\Enums\FlashMessageVariant;
 use App\Helpers\FlashMessage;
-use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
+use App\Http\Requests\Project\StoreProjectRequest;
+use App\Models\Comment;
 use App\Models\Priority;
 use App\Models\Project;
-use App\Models\Comment;
 use App\Models\Status;
 use App\Models\User;
-use Inertia\Inertia;
-use Gate;
 use DB;
+use Gate;
+use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class ProjectController extends Controller
 {
@@ -72,7 +72,7 @@ class ProjectController extends Controller
             );
 
             // add slug in the project
-            $project->slug = 'PROJECT-'.$project->id;
+            $project->slug = 'PRO-'.$project->id;
             $project->saveQuietly();
 
             // attach assignees if they exist
