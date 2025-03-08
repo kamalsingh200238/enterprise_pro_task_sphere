@@ -2,15 +2,7 @@
 import { statusIcons } from '@/lib/statusIcons';
 import type { Status } from '@/types';
 import { computed } from 'vue';
-import {
-    Select,
-    SelectContent,
-    SelectGroup,
-    SelectItem,
-    SelectLabel,
-    SelectTrigger,
-    SelectValue,
-} from './ui/select';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from './ui/select';
 
 interface Props {
     disabled: boolean;
@@ -44,10 +36,7 @@ const selectValue = computed({
                     :disabled="status.name === 'Done' && !props.updateStatusToDone"
                 >
                     <span class="flex items-center gap-2">
-                        <component
-                            :is="statusIcons[status.name]"
-                            class="h-4 w-4"
-                        />
+                        <component :is="statusIcons[status.name]" class="h-4 w-4" />
                         {{ status.name }}
                     </span>
                 </SelectItem>

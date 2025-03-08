@@ -4,8 +4,8 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import { Project } from '@/types';
-import { computed, ref } from 'vue';
 import { CheckIcon, ChevronsUpDown } from 'lucide-vue-next';
+import { computed, ref } from 'vue';
 
 interface Props {
     projects: Project[]; // List of users (supervisors and admins)

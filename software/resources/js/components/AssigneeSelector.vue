@@ -1,19 +1,8 @@
 <script setup lang="ts">
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-    Command,
-    CommandEmpty,
-    CommandGroup,
-    CommandInput,
-    CommandItem,
-    CommandList,
-} from '@/components/ui/command';
-import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
-} from '@/components/ui/popover';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import { User } from '@/types';
@@ -38,8 +27,7 @@ const searchQuery = ref('');
 const filteredPeople = computed(() => {
     const filtered = props.users.filter(
         (user) =>
-            user.name?.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-            user.email?.toLowerCase().includes(searchQuery.value.toLowerCase()),
+            user.name?.toLowerCase().includes(searchQuery.value.toLowerCase()) || user.email?.toLowerCase().includes(searchQuery.value.toLowerCase()),
     );
 
     // Sort to ensure the selected user appears first in the list
@@ -79,19 +67,14 @@ const getInitials = (name: string) => {
     <Popover>
         <PopoverTrigger as-child>
             <!-- button that display the dropdown to select assignees -->
-            <Button
-                variant="outline"
-                :class="cn('justify-between', props.buttonClass)"
-            >
+            <Button variant="outline" :class="cn('justify-between', props.buttonClass)">
                 <span>Select Assignees</span>
                 <div class="inline-flex items-center gap-2">
                     <ChevronsUpDown class="h-4 w-4 shrink-0 opacity-50" />
                     <!-- display how many assignees are selected -->
                     <template v-if="selectedAssignees.length > 0">
                         <Separator orientation="vertical" class="h-4" />
-                        <Badge variant="secondary">
-                            {{ selectedAssignees.length }} selected
-                        </Badge>
+                        <Badge variant="secondary"> {{ selectedAssignees.length }} selected </Badge>
                     </template>
                 </div>
             </Button>
@@ -99,14 +82,8 @@ const getInitials = (name: string) => {
 
         <PopoverContent class="w-96 p-0" align="start">
             <!-- dropdown with search that display viewers -->
-            <Command
-                v-model:search-term="searchQuery"
-                :disabled="props.disabled"
-            >
-                <CommandInput
-                    v-model="searchQuery"
-                    placeholder="Search users..."
-                />
+            <Command v-model:search-term="searchQuery" :disabled="props.disabled">
+                <CommandInput v-model="searchQuery" placeholder="Search users..." />
                 <CommandList>
                     <CommandEmpty> No users found. </CommandEmpty>
                     <CommandGroup>
@@ -123,31 +100,19 @@ const getInitials = (name: string) => {
                                     :class="
                                         cn(
                                             'flex h-4 w-4 items-center justify-center rounded-md border border-primary transition-colors',
-                                            isUserSelected(user.id)
-                                                ? 'bg-primary text-primary-foreground'
-                                                : 'opacity-50 [&_svg]:invisible',
+                                            isUserSelected(user.id) ? 'bg-primary text-primary-foreground' : 'opacity-50 [&_svg]:invisible',
                                         )
                                     "
                                 >
                                     <CheckIcon :class="cn('h-4 w-4')" />
                                 </div>
 
-                                <Avatar
-                                    :class="
-                                        isUserSelected(user.id)
-                                            ? 'bg-primary/10'
-                                            : 'bg-primary/5'
-                                    "
-                                >
-                                    <AvatarFallback>{{
-                                        getInitials(user.name)
-                                    }}</AvatarFallback>
+                                <Avatar :class="isUserSelected(user.id) ? 'bg-primary/10' : 'bg-primary/5'">
+                                    <AvatarFallback>{{ getInitials(user.name) }}</AvatarFallback>
                                 </Avatar>
 
                                 <div class="flex min-w-0 flex-1 flex-col">
-                                    <span
-                                        class="text-sm font-medium leading-none"
-                                    >
+                                    <span class="text-sm font-medium leading-none">
                                         {{ user.name }}
                                     </span>
                                     <span class="text-sm text-muted-foreground">

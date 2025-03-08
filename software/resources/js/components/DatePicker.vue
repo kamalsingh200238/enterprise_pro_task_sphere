@@ -1,10 +1,6 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button';
-import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
-} from '@/components/ui/popover';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/v-calendar';
 import { cn } from '@/lib/utils';
 import { format, formatISO, parseISO } from 'date-fns';
@@ -31,11 +27,7 @@ const formatDate = (date: Date) => format(date, 'MMM d, yyyy');
 <template>
     <Popover>
         <PopoverTrigger as-child>
-            <Button
-                variant="outline"
-                :class="cn('justify-start', !date && 'text-muted-foreground')"
-                :disabled="props.disabled"
-            >
+            <Button variant="outline" :class="cn('justify-start', !date && 'text-muted-foreground')" :disabled="props.disabled">
                 <CalendarIcon class="mr-2 h-4 w-4" />
                 {{ date ? formatDate(date) : 'Pick a date' }}
             </Button>
