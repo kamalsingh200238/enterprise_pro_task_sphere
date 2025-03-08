@@ -1,10 +1,4 @@
-import {
-    CheckSquare,
-    GitPullRequest,
-    ListTodo,
-    Pause,
-    Timer,
-} from 'lucide-vue-next';
+import { CheckSquare, GitPullRequest, ListTodo, Pause, Timer } from 'lucide-vue-next';
 
 export const statusIcons = {
     Backlog: ListTodo,
