@@ -57,6 +57,23 @@ const createdProjectToast = (flash: FlashMessage) => {
     });
 };
 
+const createdTaskToast = (flash: FlashMessage) => {
+    nextTick(() => {
+        toast.success(flash.heading, {
+            duration: flash.duration,
+            closeButton: true,
+            action: {
+                label: 'Open',
+                onClick: () => {
+                    router.get(
+                        route('tasks.show', flash.context.task?.id),
+                    );
+                },
+            },
+        });
+    });
+};
+
 watch(
     flash,
     (newValue) => {
@@ -70,6 +87,8 @@ watch(
                 break;
             case 'createdProject':
                 createdProjectToast(newValue);
+            case 'createdTask':
+                createdTaskToast(newValue);
                 break;
         }
     },
