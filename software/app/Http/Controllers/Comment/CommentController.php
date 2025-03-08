@@ -1,10 +1,11 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Comment;
 
 use App\Enums\FlashMessageType;
 use App\Enums\FlashMessageVariant;
 use App\Helpers\FlashMessage;
+use App\Http\Controllers\Controller;
 use App\Models\Comment;
 use Gate;
 
