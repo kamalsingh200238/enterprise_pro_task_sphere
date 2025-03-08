@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import ViewerSelector from '@/components/ViewerSelector.vue';
+import AppLayout from '@/layouts/AppLayout.vue';
 import { Priority, Status, User } from '@/types';
 import { Head, useForm } from '@inertiajs/vue3';
 
@@ -66,8 +67,8 @@ const submit = () => {
 
 <template>
     <Head title="Create New Project" />
-    <!-- <BaseLayout> -->
-        <main class="mx-auto max-w-7xl p-8">
+    <AppLayout>
+        <main class="mx-auto min-w-[65rem] max-w-7xl p-4">
             <form @submit.prevent="submit">
                 <div class="grid gap-8 lg:grid-cols-3">
                     <div class="col-span-2 space-y-6">
@@ -78,11 +79,7 @@ const submit = () => {
                         </div>
                         <div>
                             <Label for="description">Description</Label>
-                            <Textarea
-                                id="description"
-                                v-model="form.description"
-                                rows="20"
-                            />
+                            <Textarea id="description" v-model="form.description" rows="20" />
                             <FormError :err="form.errors.description" />
                         </div>
                     </div>
@@ -100,47 +97,30 @@ const submit = () => {
                         </div>
                         <div>
                             <Label for="priority">Priority</Label>
-                            <PrioritySelect
-                                id="priority"
-                                v-model="form.priority_id"
-                                :priorities="props.priorities"
-                                :disabled="false"
-                            />
+                            <PrioritySelect id="priority" v-model="form.priority_id" :priorities="props.priorities" :disabled="false" />
                             <FormError :err="form.errors.priority_id" />
                         </div>
                         <div>
                             <div class="flex flex-col gap-1">
                                 <Label for="start-date">Start Date</Label>
-                                <DatePicker
-                                    id="start-date"
-                                    v-model="form.start_date"
-                                    :disabled="false"
-                                />
+                                <DatePicker id="start-date" v-model="form.start_date" :disabled="false" />
                             </div>
                             <FormError :err="form.errors.start_date" />
                         </div>
                         <div>
                             <div class="flex flex-col gap-1">
                                 <Label for="due-date">Due Date</Label>
-                                <DatePicker
-                                    id="due-date"
-                                    v-model="form.due_date"
-                                    :disabled="false"
-                                />
+                                <DatePicker id="due-date" v-model="form.due_date" :disabled="false" />
                             </div>
                             <FormError :err="form.errors.due_date" />
                         </div>
                         <div>
                             <div class="flex flex-col gap-1">
-                                <Label for="supervisor-selector">
-                                    Select Supervisor
-                                </Label>
+                                <Label for="supervisor-selector"> Select Supervisor </Label>
                                 <SupervisorSelect
                                     id="supervisor-selector"
                                     :disabled="false"
-                                    :superisorsAndAdmins="
-                                        props.supervisorsAndAdmins
-                                    "
+                                    :superisorsAndAdmins="props.supervisorsAndAdmins"
                                     v-model="form.supervisor_id"
                                 />
                             </div>
@@ -148,23 +128,13 @@ const submit = () => {
                         </div>
                         <div>
                             <div class="flex flex-col gap-1">
-                                <Label for="assignees-selector">
-                                    Select Assignees
-                                </Label>
-                                <AssigneeSelector
-                                    id="assignees-selector"
-                                    :users="props.users"
-                                    v-model="form.assignees"
-                                    :disabled="false"
-                                />
+                                <Label for="assignees-selector"> Select Assignees </Label>
+                                <AssigneeSelector id="assignees-selector" :users="props.users" v-model="form.assignees" :disabled="false" />
                             </div>
                             <FormError :err="form.errors.assignees" />
                         </div>
                         <div class="flex items-center space-x-2">
-                            <Checkbox
-                                id="is-private"
-                                v-model="form.is_private"
-                            />
+                            <Checkbox id="is-private" v-model="form.is_private" />
                             <label
                                 for="is-private"
                                 class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
@@ -175,9 +145,7 @@ const submit = () => {
                         <!-- display viewers selector when project is private -->
                         <div v-if="form.is_private === true">
                             <div class="flex flex-col gap-1">
-                                <Label for="viewers-selector">
-                                    Select Viewers
-                                </Label>
+                                <Label for="viewers-selector"> Select Viewers </Label>
                                 <ViewerSelector
                                     id="viewers-selector"
                                     :users="users"
@@ -191,10 +159,8 @@ const submit = () => {
                         </div>
                     </div>
                 </div>
-                <Button type="submit" :disabled="form.processing">
-                    Create Project
-                </Button>
+                <Button type="submit" :disabled="form.processing"> Create Project </Button>
             </form>
         </main>
-    <!-- </BaseLayout> -->
+    </AppLayout>
 </template>
