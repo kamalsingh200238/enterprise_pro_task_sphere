@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { Badge } from '@/Components/ui/badge';
-import { Button } from '@/Components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
     Command,
     CommandEmpty,
@@ -8,13 +8,13 @@ import {
     CommandInput,
     CommandItem,
     CommandList,
-} from '@/Components/ui/command';
+} from '@/components/ui/command';
 import {
     Popover,
     PopoverContent,
     PopoverTrigger,
-} from '@/Components/ui/popover';
-import { Separator } from '@/Components/ui/separator';
+} from '@/components/ui/popover';
+import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import { User } from '@/types';
 import { CheckIcon, ChevronsUpDown } from 'lucide-vue-next';

@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { Button } from '@/Components/ui/button';
+import { Button } from '@/components/ui/button';
 import {
     Popover,
     PopoverContent,
     PopoverTrigger,
-} from '@/Components/ui/popover';
-import { Calendar } from '@/Components/ui/v-calendar';
+} from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/v-calendar';
 import { cn } from '@/lib/utils';
 import { format, formatISO, parseISO } from 'date-fns';
 import { Calendar as CalendarIcon } from 'lucide-vue-next';
