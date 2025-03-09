@@ -75,9 +75,9 @@ class TaskPolicy
     /**
      * Check if user can create comment in task. (admin, supervisor, assignee)
      */
-    public function createComment(User $user, Project $project)
+    public function createComment(User $user, Task $task)
     {
         return $user->hasRole([UserRole::Admin, UserRole::Supervisor]) ||
-            $project->assignees->contains($user->id);
+            $task->assignees->contains($user->id);
     }
 }

@@ -7,6 +7,7 @@ use App\Enums\FlashMessageVariant;
 use App\Helpers\FlashMessage;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Task\StoreTaskRequest;
+use App\Models\Comment;
 use App\Models\Priority;
 use App\Models\Project;
 use App\Models\Status;
@@ -14,6 +15,7 @@ use App\Models\Task;
 use App\Models\User;
 use DB;
 use Gate;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class TaskController extends Controller
@@ -39,7 +41,7 @@ class TaskController extends Controller
         // check if user can access this page, i.e. only admins and supervisors
         Gate::authorize('create', Task::class);
 
-        // show the create project form to user
+        // show the create task form to user
         return Inertia::render('task/CreateTask', [
             'statuses' => Status::all(),
             'priorities' => Priority::all(),
@@ -54,7 +56,7 @@ class TaskController extends Controller
      */
     public function store(StoreTaskRequest $request)
     {
-        // check if user can create a project
+        // check if user can create a task
         Gate::authorize('create', Task::class);
 
         // get the validated data from request
@@ -62,7 +64,7 @@ class TaskController extends Controller
 
         // use db transaction to create a task
         $task = DB::transaction(function () use ($validated) {
-            // create a new project
+            // create a new task
             $task = Task::create(
                 [
                     ...$validated,
@@ -71,8 +73,8 @@ class TaskController extends Controller
                 ]
             );
 
-            // add slug in the project
-            $task->slug = 'TASK-'.$task->id;
+            // add slug in the task
+            $task->slug = 'TASK-' . $task->id;
             $task->saveQuietly();
 
             // attach assignees if they exist
@@ -85,7 +87,7 @@ class TaskController extends Controller
                 $task->viewers()->attach($validated['viewers']);
             }
 
-            // return project
+            // return task
             return $task;
         });
 
@@ -97,5 +99,171 @@ class TaskController extends Controller
                 FlashMessageType::CreatedTask,
                 ['task' => $task]
             )->toArray());
+    }
+
+    /**
+     * Display a task
+     */
+    public function show(int $id)
+    {
+        // fetch task with assignees and viewers
+        $task = Task::with([
+            'assignees:id',
+            'viewers:id',
+            'parent'
+        ])->findOrFail($id);
+
+        // check if user can view the task
+        Gate::authorize('view', arguments: $task);
+
+        $comments = $task->comments()->latest()->with('user', 'commentable')->get();
+
+        // show the task
+        return Inertia::render('task/ShowTask', [
+            'can' => [
+                'edit' => auth()->user()->can('edit', $task),
+                'updateStatus' => auth()->user()->can('updateStatus', $task),
+                'updateStatusToDone' => auth()->user()->can('updateStatusToDone', Task::class),
+                'deleteComment' => auth()->user()->can('delete', Comment::class),
+            ],
+            'task' => $task,
+            'statuses' => Status::all(),
+            'priorities' => Priority::all(),
+            'users' => User::all(),
+            'supervisorsAndAdmins' => User::getAllSupervisorsAndAdmins()->get(),
+            'comments' => $comments,
+            'projects' => Project::all()
+        ]);
+    }
+
+    /**
+     *  Edit a task
+     */
+    public function edit(StoreTaskRequest $request, Task $task)
+    {
+        // check if user can edit task
+        Gate::authorize('edit', $task);
+
+        // Get validated data
+        $validated = $request->validated();
+
+        // use db transaction
+        $updatedTask = DB::transaction(function () use ($validated, $task) {
+            // Update the task with validated data
+            $task->update([
+                ...$validated,
+                'updated_by' => auth()->id(),
+            ]);
+
+            // Update assignees if they exist in the request
+            if (isset($validated['assignees'])) {
+                $task->assignees()->sync($validated['assignees']);
+            }
+
+            // Update viewers if they exist in the request
+            if (isset($validated['viewers'])) {
+                $task->viewers()->sync($validated['viewers']);
+            }
+
+            return $task;
+        });
+
+        // redirect to show page with flash message
+        return to_route('tasks.show', $updatedTask->id)
+            ->with('flash', new FlashMessage(
+                'Task Updated Successfully',
+                FlashMessageVariant::Success,
+                FlashMessageType::Normal,
+            )->toArray());
+    }
+
+    /**
+     * Update status of the task
+     */
+    public function updateStatus(Request $request, Task $task)
+    {
+        // check if user can update status of task
+        Gate::authorize('updateStatus', $task);
+
+        // Validate the incoming request data
+        $validated = $request->validate([
+            'status_id' => ['required', 'exists:statuses,id'],
+        ]);
+
+        // get the name of done status
+        $doneStatusId = Status::where('name', 'Done')->first()->id;
+
+        // Check if user is trying to set status to "done"
+        if ($validated['status_id'] == $doneStatusId) {
+            // check if user can update status to done
+            Gate::authorize('updateStatusToDone', $task);
+        }
+
+        // Update the task with the new status
+        $task->update([
+            'status_id' => $validated['status_id'],
+        ]);
+
+        // redirect to show page with flash message
+        return to_route('tasks.show', $task->id)
+            ->with('flash', new FlashMessage(
+                'Task Updated Successfully',
+                FlashMessageVariant::Success,
+                FlashMessageType::Normal,
+            )->toArray());
+    }
+
+    /**
+     * Delete a task
+     */
+    public function delete(Task $task)
+    {
+        // check if user can delete the task
+        Gate::authorize('delete', $task);
+
+        // delete the task
+        $deleted = $task->delete();
+
+        // if task deleted
+        if ($deleted) {
+            // redirect to show all page with success message
+            return to_route('tasks.show-all')
+                ->with('flash', new FlashMessage(
+                    'Task Deleted Succesfully',
+                    FlashMessageVariant::Success,
+                    FlashMessageType::Normal,
+                )->toArray());
+        }
+
+        // if not deleted then send back with flash message
+        return back()
+            ->with('flash', new FlashMessage(
+                'There was a problem in deleting task',
+                FlashMessageVariant::Error,
+                FlashMessageType::Normal,
+            )->toArray());
+    }
+
+    /**
+     * Add a comment in task
+     */
+    public function createComment(Request $request, Task $task)
+    {
+        // check if user can create comment in task
+        Gate::authorize('createComment', $task);
+
+        // validate the incoming request
+        $validated = $request->validate([
+            'content' => ['required', 'min:3'],
+        ]);
+
+        // create a comment
+        $task->comments()->create([
+            'content' => $validated['content'],
+            'user_id' => auth()->id(),
+        ]);
+
+        // redirect to show page
+        return to_route('tasks.show', $task->id);
     }
 }

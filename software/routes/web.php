@@ -30,6 +30,11 @@ Route::middleware('auth')->group(function () {
     Route::get('/tasks', [TaskController::class, 'index'])->name('tasks.show-all');
     Route::get('/tasks/new', [TaskController::class, 'create'])->name('tasks.create');
     Route::post('/tasks', [TaskController::class, 'store'])->name('tasks.store');
+    Route::put('/tasks/status/{task}', [TaskController::class, 'updateStatus'])->name('tasks.update-status');
+    Route::get('/tasks/{id}', [TaskController::class, 'show'])->name('tasks.show');
+    Route::put('/tasks/{task}', [TaskController::class, 'edit'])->name('tasks.edit');
+    Route::delete('/tasks/{task}', [TaskController::class, 'delete'])->name('tasks.delete');
+    Route::post('/tasks/{task}/comment', [TaskController::class, 'createComment'])->name('tasks.add-comment');
 });
 
 require __DIR__.'/settings.php';
