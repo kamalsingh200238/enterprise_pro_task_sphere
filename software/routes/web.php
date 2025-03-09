@@ -40,6 +40,11 @@ Route::middleware('auth')->group(function () {
     Route::get('/sub-tasks', [SubTaskController::class, 'index'])->name('sub-tasks.show-all');
     Route::get('/sub-tasks/new', [SubTaskController::class, 'create'])->name('sub-tasks.create');
     Route::post('/sub-tasks', [SubTaskController::class, 'store'])->name('sub-tasks.store');
+    Route::put('/sub-tasks/status/{subTask}', [SubTaskController::class, 'updateStatus'])->name('sub-tasks.update-status');
+    Route::get('/sub-tasks/{id}', [SubTaskController::class, 'show'])->name('sub-tasks.show');
+    Route::put('/sub-tasks/{subTask}', [SubTaskController::class, 'edit'])->name('sub-tasks.edit');
+    Route::delete('/sub-tasks/{subTask}', [SubTaskController::class, 'delete'])->name('sub-tasks.delete');
+    Route::post('/sub-tasks/{subTask}/comment', [SubTaskController::class, 'createComment'])->name('sub-tasks.add-comment');
 });
 
 require __DIR__.'/settings.php';
