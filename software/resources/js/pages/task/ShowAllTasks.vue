@@ -8,8 +8,8 @@ interface Props {
     tasks: Task[];
 }
 
-function projectLink(id: number) {
-    return `/projects/${id}`;
+function taskLink(id: number) {
+    return `/tasks/${id}`;
 }
 
 defineProps<Props>();
@@ -18,7 +18,7 @@ defineProps<Props>();
     <!-- <BaseLayout> all projects page </BaseLayout> -->
     <AppLayout>
         <div v-for="task in tasks" :key="task.id">
-            <Link :href="projectLink(task.id)">
+            <Link :href="taskLink(task.id)">
                 <p>Project name: {{ task.name }}</p>
                 <p>Project slug: {{ task.slug }}</p>
             </Link>
