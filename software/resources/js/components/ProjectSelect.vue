@@ -21,6 +21,7 @@ const selectedProject = defineModel<number | null>({
 });
 // Search query for filtering users
 const searchQuery = ref('');
+const open = ref(false);
 
 // Computed property to filter and sort the project list
 // these projects will be displayed in the dropdown
@@ -47,6 +48,8 @@ const isProjectSelected = (userId: number) => selectedProject.value === userId;
 // Function to toggle project selection
 const selectProject = (projectId: number) => {
     selectedProject.value = selectedProject.value === projectId ? null : projectId;
+    open.value = false;
+    searchQuery.value = '';
 };
 
 // Computed property to get details of the selected user
@@ -54,14 +57,14 @@ const selectedProjectData = computed(() => props.projects.find((project) => proj
 </script>
 
 <template>
-    <Popover>
+    <Popover v-model:open="open">
         <PopoverTrigger as-child>
             <!-- button that shows the dropdown with user name -->
             <Button variant="outline" :class="cn('justify-between', props.buttonClass)">
                 <span>
                     <!-- if user is selected then show user data -->
                     <template v-if="selectedProjectData">
-                        {{ selectedProjectData.name }}
+                        {{ selectedProjectData.slug }}
                     </template>
                     <template v-else> Select project </template>
                 </span>
@@ -71,7 +74,7 @@ const selectedProjectData = computed(() => props.projects.find((project) => proj
 
         <PopoverContent class="w-96 p-0" align="start">
             <!-- dropdown with search and users -->
-            <Command v-model:search-term="searchQuery" :disabled="props.disabled">
+            <Command :disabled="props.disabled">
                 <CommandInput v-model="searchQuery" placeholder="Search projects..." />
                 <CommandList>
                     <CommandEmpty>No projects found.</CommandEmpty>
@@ -80,7 +83,7 @@ const selectedProjectData = computed(() => props.projects.find((project) => proj
                             v-for="project in filteredProjects"
                             :key="project.id"
                             :value="project"
-                            @select="() => selectProject(project.id)"
+                            @select.prevent="() => selectProject(project.id)"
                             :disabled="props.disabled"
                         >
                             <div class="flex flex-1 items-center gap-3">

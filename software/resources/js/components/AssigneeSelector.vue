@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Separator } from '@/components/ui/separator';
+import { useInitials } from '@/composables/useInitials';
 import { cn } from '@/lib/utils';
 import { User } from '@/types';
 import { CheckIcon, ChevronsUpDown } from 'lucide-vue-next';
@@ -50,17 +51,11 @@ const toggleUser = (userId: number) => {
     } else {
         selectedAssignees.value.splice(index, 1);
     }
+    searchQuery.value = '';
 };
 
 // Function to get initials from a user's name
-const getInitials = (name: string) => {
-    return name
-        .split(' ')
-        .map((word) => word[0])
-        .join('')
-        .toUpperCase()
-        .slice(0, 2);
-};
+const { getInitials } = useInitials();
 </script>
 
 <template>
@@ -82,7 +77,7 @@ const getInitials = (name: string) => {
 
         <PopoverContent class="w-96 p-0" align="start">
             <!-- dropdown with search that display viewers -->
-            <Command v-model:search-term="searchQuery" :disabled="props.disabled">
+            <Command :disabled="props.disabled">
                 <CommandInput v-model="searchQuery" placeholder="Search users..." />
                 <CommandList>
                     <CommandEmpty> No users found. </CommandEmpty>
@@ -91,7 +86,7 @@ const getInitials = (name: string) => {
                             v-for="user in filteredPeople"
                             :key="user.id"
                             :value="user"
-                            @select="() => toggleUser(user.id)"
+                            @select.prevent="() => toggleUser(user.id)"
                             :disabled="props.disabled"
                         >
                             <div class="flex flex-1 items-center gap-3">

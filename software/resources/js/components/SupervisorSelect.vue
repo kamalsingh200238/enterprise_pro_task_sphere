@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 import { User } from '@/types';
 import { computed, ref } from 'vue';
 
+import { useInitials } from '@/composables/useInitials';
 import { CheckIcon, ChevronsUpDown } from 'lucide-vue-next';
 import { Avatar, AvatarFallback } from './ui/avatar';
 
@@ -23,6 +24,7 @@ const selectedUser = defineModel<number | null>({
 });
 // Search query for filtering users
 const searchQuery = ref('');
+const open = ref(false);
 
 // Computed property to filter and sort the user list
 // these users will be displayed in the dropdown
@@ -48,24 +50,18 @@ const isUserSelected = (userId: number) => selectedUser.value === userId;
 // Function to toggle user selection
 const selectUser = (userId: number) => {
     selectedUser.value = selectedUser.value === userId ? null : userId;
+    open.value = false;
+    searchQuery.value = '';
 };
 
-// Function to get initials from a user's name
-const getInitials = (name: string) => {
-    return name
-        .split(' ')
-        .map((word) => word[0])
-        .join('')
-        .toUpperCase()
-        .slice(0, 2);
-};
+const { getInitials } = useInitials();
 
 // Computed property to get details of the selected user
 const selectedUserData = computed(() => props.superisorsAndAdmins.find((user) => user.id === selectedUser.value));
 </script>
 
 <template>
-    <Popover>
+    <Popover v-model:open="open">
         <PopoverTrigger as-child>
             <!-- button that shows the dropdown with user name -->
             <Button variant="outline" :class="cn('justify-between', props.buttonClass)">
@@ -82,7 +78,7 @@ const selectedUserData = computed(() => props.superisorsAndAdmins.find((user) =>
 
         <PopoverContent class="w-96 p-0" align="start">
             <!-- dropdown with search and users -->
-            <Command v-model:search-term="searchQuery" :disabled="props.disabled">
+            <Command :disabled="props.disabled">
                 <CommandInput v-model="searchQuery" placeholder="Search supervisors..." />
                 <CommandList>
                     <CommandEmpty>No supervisors found.</CommandEmpty>
@@ -91,7 +87,7 @@ const selectedUserData = computed(() => props.superisorsAndAdmins.find((user) =>
                             v-for="user in filteredPeople"
                             :key="user.id"
                             :value="user"
-                            @select="() => selectUser(user.id)"
+                            @select.prevent="() => selectUser(user.id)"
                             :disabled="props.disabled"
                         >
                             <div class="flex flex-1 items-center gap-3">
