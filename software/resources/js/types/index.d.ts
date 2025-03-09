@@ -38,7 +38,7 @@ export interface User {
 export type BreadcrumbItemType = BreadcrumbItem;
 
 export interface FlashMessage {
-    messageType: 'normal' | 'createdProject' | 'createdTask';
+    messageType: 'normal' | 'createdProject' | 'createdTask' | "createdSubTask";
     heading: string;
     description: string;
     variant: 'success' | 'danger' | 'info' | 'warning';
@@ -49,6 +49,7 @@ export interface FlashMessage {
 export interface FlashMessageContext {
     project?: Project;
     task?: Task;
+    subTask?: SubTask;
 }
 
 export interface Project {
@@ -74,6 +75,29 @@ export interface Project {
 
 export interface Task {
     project_id: number;
+    parent?: Project;
+    id: number;
+    slug: string;
+    name: string;
+    description: string;
+    start_date: string;
+    due_date: string;
+    status_id: number;
+    status?: Status;
+    priority_id: number;
+    priority?: Priority;
+    is_private: boolean;
+    supervisor_id: number;
+    supervisor?: User;
+    assignees: User[];
+    viewers: User[];
+    updated_by: number;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface SubTask {
+    task_id: number;
     parent?: Project;
     id: number;
     slug: string;
