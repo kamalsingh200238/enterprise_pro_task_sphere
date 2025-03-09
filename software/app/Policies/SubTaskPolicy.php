@@ -9,11 +9,19 @@ use App\Models\User;
 class SubTaskPolicy
 {
     /**
-     * Determine whether the user can view the model.
+     * Check if user can view all the sub-tasks. (admin, supervisor)
+     */
+    public function viewAll(User $user): bool
+    {
+        return $user->hasRole([UserRole::Admin, UserRole::Supervisor]);
+    }
+
+    /**
+     * Check if user can view the sub-task. (admin, supervisor, assignee)
      */
     public function view(User $user, SubTask $subTask): bool
     {
-        if (! $subTask->is_private) {
+        if (!$subTask->is_private) {
             return true;
         }
 
@@ -23,7 +31,7 @@ class SubTaskPolicy
     }
 
     /**
-     * Determine whether the user can create models.
+     * Check if user can create sub-task. (admin, supervisor)
      */
     public function create(User $user): bool
     {
@@ -31,7 +39,7 @@ class SubTaskPolicy
     }
 
     /**
-     * Determine whether the user can edit the model.
+     * Check if user can edit sub-task. (admin, supervisor)
      */
     public function edit(User $user): bool
     {
@@ -39,19 +47,36 @@ class SubTaskPolicy
     }
 
     /**
-     * Determine whether the user can update the status and priority.
+     * Check if user can update status of sub-task. (admin, supervisor, assignee)
      */
-    public function updateStatusAndPriority(User $user, SubTask $subTask)
+    public function updateStatus(User $user, SubTask $subTask)
     {
         return $user->hasRole([UserRole::Admin, UserRole::Supervisor]) ||
             $subTask->assignees->contains($user->id);
     }
 
     /**
-     * Determine whether the user can delete the model.
+     * Check if user can update status of sub-task to done. (admin, supervisor)
+     */
+    public function updateStatusToDone(User $user)
+    {
+        return $user->hasRole([UserRole::Admin, UserRole::Supervisor]);
+    }
+
+    /**
+     * Check if user can delete sub-task. (admin)
      */
     public function delete(User $user): bool
     {
         return $user->hasRole(UserRole::Admin);
+    }
+
+    /**
+     * Check if user can create comment in sub-task. (admin, supervisor, assignee)
+     */
+    public function createComment(User $user, SubTask $subTask)
+    {
+        return $user->hasRole([UserRole::Admin, UserRole::Supervisor]) ||
+            $subTask->assignees->contains($user->id);
     }
 }
