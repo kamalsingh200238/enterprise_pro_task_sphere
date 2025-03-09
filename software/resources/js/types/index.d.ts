@@ -73,7 +73,8 @@ export interface Project {
 }
 
 export interface Task {
-    project: Project;
+    project_id: number;
+    parent?: Project;
     id: number;
     slug: string;
     name: string;
