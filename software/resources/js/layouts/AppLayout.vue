@@ -83,6 +83,7 @@ watch(
                 break;
             case 'createdProject':
                 createdProjectToast(newValue);
+                break;
             case 'createdTask':
                 createdTaskToast(newValue);
                 break;
@@ -93,7 +94,7 @@ watch(
 </script>
 
 <template>
-    <Toaster rich-colors />
+    <Toaster rich-colors position="top-right" />
     <AppLayout :breadcrumbs="breadcrumbs">
         <slot />
     </AppLayout>
