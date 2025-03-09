@@ -70,6 +70,21 @@ const createdTaskToast = (flash: FlashMessage) => {
     });
 };
 
+const createSubTaskToast = (flash: FlashMessage) => {
+    nextTick(() => {
+        toast.success(flash.heading, {
+            duration: flash.duration,
+            closeButton: true,
+            action: {
+                label: 'Open',
+                onClick: () => {
+                    router.get(route('sub-tasks.show', flash.context.subTask?.id));
+                },
+            },
+        });
+    });
+};
+
 watch(
     flash,
     (newValue) => {
@@ -86,6 +101,9 @@ watch(
                 break;
             case 'createdTask':
                 createdTaskToast(newValue);
+                break;
+            case 'createdSubTask':
+                createSubTaskToast(newValue);
                 break;
         }
     },
