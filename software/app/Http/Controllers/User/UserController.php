@@ -6,6 +6,7 @@ use App\Enums\FlashMessageType;
 use App\Enums\FlashMessageVariant;
 use App\Helpers\FlashMessage;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\User\EditUserRequest;
 use App\Http\Requests\User\StoreUserRequest;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -57,6 +58,7 @@ class UserController extends Controller
             'role' => $validated['role']
         ]);
 
+        // redirect to show all page with a notification
         return redirect()->route('users.show-all')
             ->with('flash', new FlashMessage(
                 'Created User Successfully',
@@ -78,74 +80,61 @@ class UserController extends Controller
     /**
      * Update the specified user in storage.
      */
-    // public function update(Request $request, User $user)
-    // {
-    //     $validated = $request->validate([
-    //         'name' => 'required|string|max:255',
-    //         'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
-    //         'password' => 'sometimes|string|min:8|confirmed',
-    //         'is_admin' => 'sometimes|boolean',
-    //     ]);
+    public function edit(EditUserRequest $request, User $user)
+    {
+        // valiate user data
+        $validated = $request->validated();
 
-    //     $user->name = $validated['name'];
-    //     $user->email = $validated['email'];
+        // update user fields
+        $user->name = $validated['name'];
+        $user->email = $validated['email'];
+        $user->role = $validated['role'];
 
-    //     if ($request->filled('password')) {
-    //         $user->password = Hash::make($validated['password']);
-    //     }
+        // only update password if they provide password
+        if ($request->filled('password')) {
+            $user->password = $validated['password'];
+        }
+        $user->save();
 
-    //     $user->is_admin = $request->filled('is_admin');
-    //     $user->save();
-
-    //     return redirect()->route('users.show');
-    // }
+        return redirect()->route('users.show', $user->id)
+            ->with('flash', new FlashMessage(
+                'Edited User Successfully',
+                FlashMessageVariant::Success,
+                FlashMessageType::Normal,
+            )->toArray());
+    }
 
     /**
      * Soft delete the specified user.
      */
-    // public function destroy(User $user)
-    // {
-    //     // Prevent self-deletion
-    //     if ($user->id === auth()->id()) {
-    //         return back()->with('error', 'You cannot delete yourself');
-    //     }
+    public function delete(User $user)
+    {
+        // Prevent self-deletion
+        if ($user->id === auth()->id()) {
+            return back()
+                ->with('flash', new FlashMessage(
+                    'You cannot delete yourself',
+                    FlashMessageVariant::Error,
+                    FlashMessageType::Normal,
+                )->toArray());
+        }
 
-    //     $user->delete();
+        $deleted = $user->delete();
 
-    //     return redirect()->route('admin.users.index')
-    //         ->with('message', 'User deleted successfully');
-    // }
+        if ($deleted) {
+            return redirect()->route('users.show-all')
+                ->with('flash', new FlashMessage(
+                    'User deleted successfully',
+                    FlashMessageVariant::Success,
+                    FlashMessageType::Normal,
+                )->toArray());
+        }
 
-    /**
-     * Restore the soft-deleted user.
-     */
-    // public function restore($id)
-    // {
-    //     // We need to use $id instead of route binding because the user is soft deleted
-    //     $user = User::onlyTrashed()->findOrFail($id);
-    //     $user->restore();
-
-    //     return redirect()->route('admin.users.index')
-    //         ->with('message', 'User restored successfully');
-    // }
-
-    /**
-     * Permanently delete the user.
-     */
-    // public function forceDelete($id)
-    // {
-    //     // We need to use $id instead of route binding because the user is soft deleted
-    //     $user = User::withTrashed()->findOrFail($id);
-
-    //     // Prevent self-force-deletion
-    //     if ($user->id === auth()->id()) {
-    //         return back()->with('error', 'You cannot delete yourself');
-    //     }
-
-    //     $user->forceDelete();
-
-    //     return redirect()->route('admin.users.index')
-    //         ->with('message', 'User permanently deleted');
-    // }
-
+        return back()
+            ->with('flash', new FlashMessage(
+                'Error in deleting the user',
+                FlashMessageVariant::Error,
+                FlashMessageType::Normal,
+            )->toArray());
+    }
 }
