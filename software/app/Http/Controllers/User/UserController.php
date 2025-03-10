@@ -9,6 +9,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\User\EditUserRequest;
 use App\Http\Requests\User\StoreUserRequest;
 use App\Models\User;
+use Gate;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
@@ -20,6 +21,8 @@ class UserController extends Controller
      */
     public function index(Request $request)
     {
+        Gate::authorize('viewAll', User::class);
+
         $users = User::query()
             ->when($request->input('search'), function ($query, $search) {
                 $query->where('name', 'like', "%{$search}%")
@@ -39,6 +42,7 @@ class UserController extends Controller
      */
     public function create()
     {
+        Gate::authorize('create', User::class);
         return Inertia::render('admin/CreateUser');
     }
 
@@ -47,6 +51,7 @@ class UserController extends Controller
      */
     public function store(StoreUserRequest $request)
     {
+        Gate::authorize('create', User::class);
         // get the validated request data
         $validated = $request->validated();
 
@@ -72,6 +77,8 @@ class UserController extends Controller
      */
     public function show(User $user)
     {
+        Gate::authorize('view', User::class);
+
         return Inertia::render('admin/ShowUser', [
             'user' => $user
         ]);
@@ -82,6 +89,8 @@ class UserController extends Controller
      */
     public function edit(EditUserRequest $request, User $user)
     {
+        Gate::authorize('edit', User::class);
+
         // valiate user data
         $validated = $request->validated();
 
@@ -109,6 +118,8 @@ class UserController extends Controller
      */
     public function delete(User $user)
     {
+        Gate::authorize('delete', User::class);
+
         // Prevent self-deletion
         if ($user->id === auth()->id()) {
             return back()
