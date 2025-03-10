@@ -31,9 +31,12 @@ export interface User {
     name: string;
     email: string;
     avatar?: string;
+    role: UserRole;
     created_at: string;
     updated_at: string;
 }
+
+export type UserRole = 'admin' | 'supervisor' | 'staff';
 
 export type BreadcrumbItemType = BreadcrumbItem;
 
