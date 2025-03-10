@@ -38,7 +38,7 @@ export interface User {
 export type BreadcrumbItemType = BreadcrumbItem;
 
 export interface FlashMessage {
-    messageType: 'normal' | 'createdProject' | 'createdTask' | "createdSubTask";
+    messageType: 'normal' | 'createdProject' | 'createdTask' | 'createdSubTask';
     heading: string;
     description: string;
     variant: 'success' | 'danger' | 'info' | 'warning';
@@ -141,4 +141,16 @@ export interface Comment {
     user: User;
     created_at: string;
     updated_at: string;
+}
+
+export interface PaginatedData<T> {
+    data: T[];
+    current_page: number;
+    last_page: number;
+    per_page: number;
+    total: number;
+    from?: number;
+    to?: number;
+    next_page_url?: string | null;
+    prev_page_url?: string | null;
 }
