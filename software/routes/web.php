@@ -21,6 +21,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/users', [UserController::class, 'index'])->name('users.show-all');
     Route::get('/users/new', [UserController::class, 'create'])->name('users.create');
     Route::post('/users', [UserController::class, 'store'])->name('users.store');
+    Route::get('/users/{user}', [UserController::class, 'show'])->name('users.show');
+    Route::put('/users/{user}', [UserController::class, 'edit'])->name('users.edit');
+    Route::delete('/users/{user}', [UserController::class, 'delete'])->name('users.delete');
 
     Route::get('/projects', [ProjectController::class, 'index'])->name('projects.show-all');
     Route::get('/projects/new', [ProjectController::class, 'create'])->name('projects.create');
