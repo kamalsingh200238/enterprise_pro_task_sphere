@@ -4,6 +4,7 @@ use App\Http\Controllers\Comment\CommentController;
 use App\Http\Controllers\Project\ProjectController;
 use App\Http\Controllers\SubTask\SubTaskController;
 use App\Http\Controllers\Task\TaskController;
+use App\Http\Controllers\User\UserController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -17,6 +18,10 @@ Route::get('dashboard', function () {
 })->middleware(['auth'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
+    Route::get('/users', [UserController::class, 'index'])->name('users.show-all');
+    Route::get('/users/new', [UserController::class, 'create'])->name('users.create');
+    Route::post('/users', [UserController::class, 'store'])->name('users.store');
+
     Route::get('/projects', [ProjectController::class, 'index'])->name('projects.show-all');
     Route::get('/projects/new', [ProjectController::class, 'create'])->name('projects.create');
     Route::post('/projects', [ProjectController::class, 'store'])->name('projects.store');
