@@ -38,7 +38,6 @@ return new class extends Migration
             $table->foreignId('supervisor_id')->constrained('users');
 
             $table->timestampsTz(); // Created and updated timestamps
-            $table->softDeletes(); // Soft deletes the project.
         });
     }
 

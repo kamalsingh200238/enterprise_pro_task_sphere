@@ -38,10 +38,9 @@ return new class extends Migration {
             // Store id of user who is supervisor of the sub-task
             $table->foreignId('supervisor_id')->constrained('users');
             // Store id of parent task
-            $table->foreignId('task_id')->constrained('tasks');
+            $table->foreignId('task_id')->constrained('tasks')->cascadeOnDelete();
 
             $table->timestampsTz();
-            $table->softDeletes();
         });
 
         /**

@@ -6,13 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
 class SubTask extends Model
 {
-    // add soft delete trait
-    use SoftDeletes;
-
     /**
      * The attributes that are mass assignable.
      *

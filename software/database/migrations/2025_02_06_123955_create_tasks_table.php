@@ -37,10 +37,9 @@ return new class extends Migration
             // store id of user who is supervisor of the task
             $table->foreignId('supervisor_id')->constrained('users');
             // store id of project which is parent of the task
-            $table->foreignId('project_id')->constrained('projects');
+            $table->foreignId('project_id')->constrained('projects')->cascadeOnDelete();
 
             $table->timestampsTz();
-            $table->softDeletes();
         });
     }
 
