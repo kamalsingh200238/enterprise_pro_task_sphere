@@ -84,8 +84,19 @@ const fetchTasks = () => {
         {
             search: filter.value.search,
             page: filter.value.page,
+            supervisorIds: filter.value.supervisorIds,
+            assigneeIds: filter.value.assigneeIds,
+            viewerIds: filter.value.viewerIds,
+            creatorIds: filter.value.creatorIds,
+            taskType: filter.value.taskType,
+            statusIds: filter.value.statusIds,
+            priorityIds: filter.value.priorityIds,
+            perPage: filter.value.perPage,
+            showOverdue: filter.value.showOverdue,
+            sortBy: filter.value.sortBy,
+            sortDirection: filter.value.sortDirection,
         },
-        { preserveState: true, replace: true },
+        { preserveState: true, replace: true, preserveScroll: true },
     );
 };
 
