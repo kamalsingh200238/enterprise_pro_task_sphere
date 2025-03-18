@@ -54,7 +54,7 @@ const submit = () => {
                     </div>
                     <div>
                         <Label for="name">Select Role</Label>
-                        <RoleSelect v-model="form.role" :disabled="false"/>
+                        <RoleSelect v-model="form.role" :disabled="false" />
                         <FormError :err="form.errors.role" />
                     </div>
                 </div>
