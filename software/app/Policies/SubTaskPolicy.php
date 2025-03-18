@@ -21,7 +21,7 @@ class SubTaskPolicy
      */
     public function view(User $user, SubTask $subTask): bool
     {
-        if (!$subTask->is_private) {
+        if (! $subTask->is_private) {
             return true;
         }
 

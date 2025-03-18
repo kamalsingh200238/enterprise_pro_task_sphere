@@ -14,8 +14,6 @@ use App\Models\User;
 use Carbon\Carbon;
 use DB;
 use Illuminate\Http\Request;
-use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Pagination\Paginator;
 use Inertia\Inertia;
 
 class DashboardController extends Controller
@@ -39,7 +37,7 @@ class DashboardController extends Controller
 
         // Validate sort field
         $allowedSortFields = ['due_date', 'updated_at', 'status_id', 'priority_id'];
-        if (!in_array($sortBy, $allowedSortFields)) {
+        if (! in_array($sortBy, $allowedSortFields)) {
             $sortBy = 'due_date'; // Fallback to default if invalid
         }
 
@@ -53,7 +51,7 @@ class DashboardController extends Controller
 
         $temp = $projects->union($tasks)->union($subTasks)->orderBy($sortBy, $sortDirection)->paginate($perPage);
 
-        return Inertia::render("Dashboard", [
+        return Inertia::render('Dashboard', [
             'tasks' => $temp,
             'search' => $search,
             'supervisorsAndAdmins' => User::getAllSupervisorsAndAdmins()->get(),
@@ -68,11 +66,11 @@ class DashboardController extends Controller
         $query = Project::with(['status', 'priority']);
 
         // Apply access control for non-admin/supervisor users
-        if (!$user->hasRole([UserRole::Admin, UserRole::Supervisor])) {
+        if (! $user->hasRole([UserRole::Admin, UserRole::Supervisor])) {
             $query->where(function ($q) use ($user) {
                 $q->where('is_private', false)
-                    ->orWhereHas('assignees', fn($subquery) => $subquery->where('user_id', $user->id))
-                    ->orWhereHas('viewers', fn($subquery) => $subquery->where('user_id', $user->id));
+                    ->orWhereHas('assignees', fn ($subquery) => $subquery->where('user_id', $user->id))
+                    ->orWhereHas('viewers', fn ($subquery) => $subquery->where('user_id', $user->id));
             });
         }
 
@@ -84,31 +82,31 @@ class DashboardController extends Controller
             });
         }
 
-        if (!empty($statusFilter)) {
+        if (! empty($statusFilter)) {
             $query->whereIn('status_id', $statusFilter);
         }
 
-        if (!empty($priorityFilter)) {
+        if (! empty($priorityFilter)) {
             $query->whereIn('priority_id', $priorityFilter);
         }
 
-        if (!empty($supervisorFilter)) {
+        if (! empty($supervisorFilter)) {
             $query->whereIn('supervisor_id', $supervisorFilter);
         }
 
-        if (!empty($assigneeFilter)) {
+        if (! empty($assigneeFilter)) {
             $query->whereHas('assignees', function ($q) use ($assigneeFilter) {
                 $q->whereIn('user_id', $assigneeFilter);
             });
         }
 
-        if (!empty($viewerFilter)) {
+        if (! empty($viewerFilter)) {
             $query->whereHas('viewers', function ($q) use ($viewerFilter) {
                 $q->whereIn('user_id', $viewerFilter);
             });
         }
 
-        if (!empty($creatorFilter)) {
+        if (! empty($creatorFilter)) {
             $query->whereIn('created_by', $creatorFilter);
         }
 
@@ -131,7 +129,7 @@ class DashboardController extends Controller
             'priority',
             'updated_at',
             DB::raw('NULL as project_id'),
-            DB::raw('NULL as task_id')
+            DB::raw('NULL as task_id'),
         ]);
     }
 
@@ -141,11 +139,11 @@ class DashboardController extends Controller
         $query = Task::with(['status', 'priority']);
 
         // Access control
-        if (!$user->hasRole([UserRole::Admin, UserRole::Supervisor])) {
+        if (! $user->hasRole([UserRole::Admin, UserRole::Supervisor])) {
             $query->where(function ($q) use ($user) {
                 $q->where('is_private', false)
-                    ->orWhereHas('assignees', fn($subquery) => $subquery->where('user_id', $user->id))
-                    ->orWhereHas('viewers', fn($subquery) => $subquery->where('user_id', $user->id));
+                    ->orWhereHas('assignees', fn ($subquery) => $subquery->where('user_id', $user->id))
+                    ->orWhereHas('viewers', fn ($subquery) => $subquery->where('user_id', $user->id));
             });
         }
 
@@ -156,31 +154,31 @@ class DashboardController extends Controller
             });
         }
 
-        if (!empty($statusFilter)) {
+        if (! empty($statusFilter)) {
             $query->whereIn('status_id', $statusFilter);
         }
 
-        if (!empty($priorityFilter)) {
+        if (! empty($priorityFilter)) {
             $query->whereIn('priority_id', $priorityFilter);
         }
 
-        if (!empty($supervisorFilter)) {
+        if (! empty($supervisorFilter)) {
             $query->whereIn('supervisor_id', $supervisorFilter);
         }
 
-        if (!empty($assigneeFilter)) {
+        if (! empty($assigneeFilter)) {
             $query->whereHas('assignees', function ($q) use ($assigneeFilter) {
                 $q->whereIn('user_id', $assigneeFilter);
             });
         }
 
-        if (!empty($viewerFilter)) {
+        if (! empty($viewerFilter)) {
             $query->whereHas('viewers', function ($q) use ($viewerFilter) {
                 $q->whereIn('user_id', $viewerFilter);
             });
         }
 
-        if (!empty($creatorFilter)) {
+        if (! empty($creatorFilter)) {
             $query->whereIn('created_by', $creatorFilter);
         }
 
@@ -203,7 +201,7 @@ class DashboardController extends Controller
             'priority',
             'updated_at',
             'project_id',
-            DB::raw('NULL as task_id')
+            DB::raw('NULL as task_id'),
         ]);
     }
 
@@ -212,11 +210,11 @@ class DashboardController extends Controller
         $query = SubTask::with(['status', 'priority']);
 
         // Access control
-        if (!$user->hasRole([UserRole::Admin, UserRole::Supervisor])) {
+        if (! $user->hasRole([UserRole::Admin, UserRole::Supervisor])) {
             $query->where(function ($q) use ($user) {
                 $q->where('is_private', false)
-                    ->orWhereHas('assignees', fn($subquery) => $subquery->where('user_id', $user->id))
-                    ->orWhereHas('viewers', fn($subquery) => $subquery->where('user_id', $user->id));
+                    ->orWhereHas('assignees', fn ($subquery) => $subquery->where('user_id', $user->id))
+                    ->orWhereHas('viewers', fn ($subquery) => $subquery->where('user_id', $user->id));
             });
         }
 
@@ -227,31 +225,31 @@ class DashboardController extends Controller
             });
         }
 
-        if (!empty($statusFilter)) {
+        if (! empty($statusFilter)) {
             $query->whereIn('status_id', $statusFilter);
         }
 
-        if (!empty($priorityFilter)) {
+        if (! empty($priorityFilter)) {
             $query->whereIn('priority_id', $priorityFilter);
         }
 
-        if (!empty($supervisorFilter)) {
+        if (! empty($supervisorFilter)) {
             $query->whereIn('supervisor_id', $supervisorFilter);
         }
 
-        if (!empty($assigneeFilter)) {
+        if (! empty($assigneeFilter)) {
             $query->whereHas('assignees', function ($q) use ($assigneeFilter) {
                 $q->whereIn('user_id', $assigneeFilter);
             });
         }
 
-        if (!empty($viewerFilter)) {
+        if (! empty($viewerFilter)) {
             $query->whereHas('viewers', function ($q) use ($viewerFilter) {
                 $q->whereIn('user_id', $viewerFilter);
             });
         }
 
-        if (!empty($creatorFilter)) {
+        if (! empty($creatorFilter)) {
             $query->whereIn('created_by', $creatorFilter);
         }
 
@@ -274,7 +272,7 @@ class DashboardController extends Controller
             'priority',
             'updated_at',
             DB::raw('NULL as project_id'),
-            'task_id'
+            'task_id',
         ]);
     }
 }

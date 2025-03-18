@@ -19,7 +19,7 @@ class EditUserRequest extends FormRequest
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', Rule::unique('users')->ignore($this->route('user'))],
             'password' => ['nullable', 'min:8'],
-            'role' => ['required', Rule::enum(UserRole::class)]
+            'role' => ['required', Rule::enum(UserRole::class)],
         ];
     }
 }

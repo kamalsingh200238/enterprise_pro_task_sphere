@@ -11,7 +11,6 @@ use App\Http\Requests\User\StoreUserRequest;
 use App\Models\User;
 use Gate;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
 class UserController extends Controller
@@ -33,7 +32,7 @@ class UserController extends Controller
 
         return Inertia::render('admin/ShowAllUsers', [
             'users' => $users,
-            'search' => $request->input('search', '')
+            'search' => $request->input('search', ''),
         ]);
     }
 
@@ -43,6 +42,7 @@ class UserController extends Controller
     public function create()
     {
         Gate::authorize('create', User::class);
+
         return Inertia::render('admin/CreateUser');
     }
 
@@ -60,7 +60,7 @@ class UserController extends Controller
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => $validated['password'],
-            'role' => $validated['role']
+            'role' => $validated['role'],
         ]);
 
         // redirect to show all page with a notification
@@ -80,7 +80,7 @@ class UserController extends Controller
         Gate::authorize('view', User::class);
 
         return Inertia::render('admin/ShowUser', [
-            'user' => $user
+            'user' => $user,
         ]);
     }
 

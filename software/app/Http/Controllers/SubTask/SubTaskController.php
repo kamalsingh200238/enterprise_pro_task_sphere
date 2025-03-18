@@ -74,7 +74,7 @@ class SubTaskController extends Controller
             );
 
             // add slug in the sub-task
-            $subTask->slug = 'SUB-' . $subTask->id;
+            $subTask->slug = 'SUB-'.$subTask->id;
             $subTask->saveQuietly();
 
             // attach assignees if they exist
@@ -110,7 +110,7 @@ class SubTaskController extends Controller
         $subTask = SubTask::with([
             'assignees:id',
             'viewers:id',
-            'parent'
+            'parent',
         ])->findOrFail($id);
 
         // check if user can view the sub-task
@@ -132,7 +132,7 @@ class SubTaskController extends Controller
             'users' => User::all(),
             'supervisorsAndAdmins' => User::getAllSupervisorsAndAdmins()->get(),
             'comments' => $comments,
-            'tasks' => Task::all()
+            'tasks' => Task::all(),
         ]);
     }
 

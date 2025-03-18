@@ -54,5 +54,5 @@ Route::middleware('auth')->group(function () {
     Route::post('/sub-tasks/{subTask}/comment', [SubTaskController::class, 'createComment'])->name('sub-tasks.add-comment');
 });
 
-require __DIR__ . '/settings.php';
-require __DIR__ . '/auth.php';
+require __DIR__.'/settings.php';
+require __DIR__.'/auth.php';

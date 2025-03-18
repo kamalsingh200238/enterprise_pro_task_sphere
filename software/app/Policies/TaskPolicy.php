@@ -3,7 +3,6 @@
 namespace App\Policies;
 
 use App\Enums\UserRole;
-use App\Models\Project;
 use App\Models\Task;
 use App\Models\User;
 

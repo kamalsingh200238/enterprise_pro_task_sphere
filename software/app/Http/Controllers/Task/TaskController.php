@@ -74,7 +74,7 @@ class TaskController extends Controller
             );
 
             // add slug in the task
-            $task->slug = 'TASK-' . $task->id;
+            $task->slug = 'TASK-'.$task->id;
             $task->saveQuietly();
 
             // attach assignees if they exist
@@ -110,7 +110,7 @@ class TaskController extends Controller
         $task = Task::with([
             'assignees:id',
             'viewers:id',
-            'parent'
+            'parent',
         ])->findOrFail($id);
 
         // check if user can view the task
@@ -132,7 +132,7 @@ class TaskController extends Controller
             'users' => User::all(),
             'supervisorsAndAdmins' => User::getAllSupervisorsAndAdmins()->get(),
             'comments' => $comments,
-            'projects' => Project::all()
+            'projects' => Project::all(),
         ]);
     }
 
