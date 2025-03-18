@@ -28,8 +28,7 @@ const open = ref(false);
 const filteredTasks = computed(() => {
     const filtered = props.tasks.filter(
         (task) =>
-            task.name?.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-            task.slug?.toLowerCase().includes(searchQuery.value.toLowerCase()),
+            task.name?.toLowerCase().includes(searchQuery.value.toLowerCase()) || task.slug?.toLowerCase().includes(searchQuery.value.toLowerCase()),
     );
 
     // Sort to ensure the selected task appears first in the list
