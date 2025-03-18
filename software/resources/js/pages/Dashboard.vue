@@ -21,7 +21,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { PaginatedData, Priority, Project, Status, SubTask, Task, User, type BreadcrumbItem } from '@/types';
+import { PaginatedData, Priority, Project, SortDirection, Status, SubTask, Task, User, type BreadcrumbItem } from '@/types';
 import { Head, router } from '@inertiajs/vue3';
 import { debounce } from 'lodash';
 import { ArrowDown, ArrowUp, ArrowUpDown, ChevronDown, Filter, Search, X } from 'lucide-vue-next';
@@ -42,8 +42,6 @@ interface Props {
     statuses: Status[];
     priorities: Priority[];
 }
-
-type SortDirection = 'asc' | 'desc';
 
 interface Filter {
     search: string;

@@ -157,3 +157,5 @@ export interface PaginatedData<T> {
     next_page_url?: string | null;
     prev_page_url?: string | null;
 }
+
+type SortDirection = 'asc' | 'desc';
