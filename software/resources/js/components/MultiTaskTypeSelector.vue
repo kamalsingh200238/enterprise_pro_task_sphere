@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { taskType } from '@/lib/taskType';
+import { taskTypes } from '@/lib/taskTypes';
 import { cn } from '@/lib/utils';
-import { CheckIcon, PlusCircleIcon, Search } from 'lucide-vue-next';
+import { CheckIcon, ChevronsUpDown } from 'lucide-vue-next';
+import { computed, ref } from 'vue';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
-import { Combobox, ComboboxAnchor, ComboboxGroup, ComboboxInput, ComboboxItem, ComboboxList, ComboboxTrigger } from './ui/combobox';
-import ComboboxEmpty from './ui/combobox/ComboboxEmpty.vue';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from './ui/command';
+import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import { Separator } from './ui/separator';
 
 interface Props {
@@ -16,60 +17,70 @@ interface Props {
 withDefaults(defineProps<Props>(), {
     disabled: false,
 });
-const modelValue = defineModel<string[]>({ required: true });
-const isTypeSelected = (value: string) => {
-    return modelValue.value.includes(value);
+
+const modelValue = defineModel<string[]>({ required: true, default: [] });
+const searchQuery = ref('');
+
+const filteredTaskTypes = computed(() => {
+    return taskTypes.filter((t) => t.label.toLowerCase().includes(searchQuery.value.toLowerCase()));
+});
+
+const toggleType = (value: string) => {
+    const index = modelValue.value.indexOf(value);
+    if (index === -1) {
+        modelValue.value.push(value);
+    } else {
+        modelValue.value.splice(index, 1);
+    }
+    searchQuery.value = '';
 };
 </script>
 
 <template>
-    <Combobox by="label" v-model="modelValue" class="w-fit" multiple>
-        <ComboboxAnchor as-child>
-            <ComboboxTrigger as-child>
-                <Button variant="outline" :class="cn('w-fit justify-start text-left', buttonClass)" :disabled="disabled">
-                    <PlusCircleIcon class="mr-2 h-4 w-4" />
-                    <span class="truncate">Task Type</span>
+    <Popover>
+        <PopoverTrigger as-child>
+            <Button variant="outline" :class="cn('min-w-80 justify-between text-left', buttonClass)" :disabled="disabled">
+                <span class="truncate">Select Task Type</span>
+                <div class="ml-2 flex h-full items-center gap-2">
+                    <ChevronsUpDown class="h-4 w-4 shrink-0 opacity-50" />
                     <template v-if="modelValue.length > 0">
                         <Separator orientation="vertical" class="mx-2" />
-                        <div class="flex space-x-1">
-                            <Badge v-if="modelValue.length > 0" variant="secondary" class="rounded-sm px-1 font-normal">
-                                {{ modelValue.length }} selected
-                            </Badge>
-                        </div>
+                        <Badge variant="secondary" class="rounded-sm px-1 font-normal"> {{ modelValue.length }} selected </Badge>
                     </template>
-                </Button>
-            </ComboboxTrigger>
-        </ComboboxAnchor>
+                </div>
+            </Button>
+        </PopoverTrigger>
 
-        <ComboboxList class="min-w-60" align="start">
-            <div class="relative w-full max-w-sm items-center">
-                <ComboboxInput class="h-10 rounded-none border-0 border-b pl-9 focus-visible:ring-0" placeholder="Search Task Type" />
-                <span class="absolute inset-y-0 start-0 flex items-center justify-center px-3">
-                    <Search class="size-4 text-muted-foreground" />
-                </span>
-            </div>
-
-            <ComboboxEmpty>No results found.</ComboboxEmpty>
-
-            <ComboboxGroup>
-                <ComboboxItem v-for="t in taskType" :key="t.label" :text-value="t.label" :value="t.value" :disabled="disabled">
-                    <div class="flex flex-1 items-center gap-3">
-                        <div
-                            :class="
-                                cn(
-                                    'flex h-4 w-4 items-center justify-center rounded-sm border border-primary transition-colors',
-                                    isTypeSelected(t.value) ? 'bg-primary text-primary-foreground' : 'opacity-50 [&_svg]:invisible',
-                                )
-                            "
+        <PopoverContent class="min-w-80 p-0" align="start">
+            <Command :disabled="disabled">
+                <CommandInput v-model="searchQuery" placeholder="Search Task Type..." />
+                <CommandList>
+                    <CommandEmpty>No results found.</CommandEmpty>
+                    <CommandGroup>
+                        <CommandItem
+                            v-for="t in filteredTaskTypes"
+                            :key="t.value"
+                            :value="t.value"
+                            :disabled="disabled"
+                            @select.prevent="toggleType(t.value)"
                         >
-                            <CheckIcon class="h-3 w-3" />
-                        </div>
-                        <span>
-                            {{ t.label }}
-                        </span>
-                    </div>
-                </ComboboxItem>
-            </ComboboxGroup>
-        </ComboboxList>
-    </Combobox>
+                            <div class="flex flex-1 items-center gap-3">
+                                <div
+                                    :class="
+                                        cn(
+                                            'flex h-4 w-4 items-center justify-center rounded-md border border-primary transition-colors',
+                                            modelValue.includes(t.value) ? 'bg-primary text-primary-foreground' : 'opacity-50 [&_svg]:invisible',
+                                        )
+                                    "
+                                >
+                                    <CheckIcon class="h-4 w-4" />
+                                </div>
+                                <div>{{ t.label }}</div>
+                            </div>
+                        </CommandItem>
+                    </CommandGroup>
+                </CommandList>
+            </Command>
+        </PopoverContent>
+    </Popover>
 </template>
