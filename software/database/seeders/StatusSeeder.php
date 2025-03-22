@@ -25,11 +25,11 @@ class StatusSeeder extends Seeder
             ],
             [
                 'name' => 'On Hold',
-                'color' => Color::Gray,
+                'color' => Color::Yellow,
             ],
             [
                 'name' => 'In Review',
-                'color' => Color::Green,
+                'color' => Color::Purple,
             ],
             [
                 'name' => 'Done',
