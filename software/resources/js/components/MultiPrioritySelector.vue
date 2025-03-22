@@ -1,34 +1,43 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button';
+import { priorityIcons } from '@/lib/priorityIcons';
 import { cn } from '@/lib/utils';
 import { Priority } from '@/types';
-import { CheckIcon, PlusCircleIcon, Search } from 'lucide-vue-next';
+import { CheckIcon, ChevronsUpDown } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
 import { Badge } from './ui/badge';
-import { Combobox, ComboboxAnchor, ComboboxEmpty, ComboboxGroup, ComboboxInput, ComboboxItem, ComboboxList, ComboboxTrigger } from './ui/combobox';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from './ui/command';
+import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import { Separator } from './ui/separator';
 
+// component props definition
 interface Props {
     priorities: Priority[];
     disabled?: boolean;
     buttonClass?: string;
 }
 
+// set default values for optional props
 const props = withDefaults(defineProps<Props>(), {
     disabled: false,
 });
 
+// two-way binding for selected priority ids
 const selectedPriorityIds = defineModel<number[]>({ required: true });
+
+// search input state
 const searchQuery = ref('');
 
+// filter priorities based on search query
 const filteredPriorities = computed(() => {
-    // filters users based on the search query
-    return props.priorities.filter((status) => status.name?.toLowerCase().includes(searchQuery.value.toLowerCase()));
+    return props.priorities.filter((priority) => priority.name?.toLowerCase().includes(searchQuery.value.toLowerCase()));
 });
 
+// check if a priority is currently selected
 const isPrioritySelected = (priorityId: number) => selectedPriorityIds.value.includes(priorityId);
 
-const togglePrirority = (priorityId: number) => {
+// toggle priority selection state
+const togglePriority = (priorityId: number) => {
     const index = selectedPriorityIds.value.indexOf(priorityId);
     if (index === -1) {
         selectedPriorityIds.value.push(priorityId);
@@ -37,65 +46,69 @@ const togglePrirority = (priorityId: number) => {
     }
     searchQuery.value = '';
 };
+
+// get icon component for priority if available
+const getPriorityIcon = (priorityName: Priority['name']) => {
+    return priorityName && priorityIcons[priorityName] ? priorityIcons[priorityName] : null;
+};
 </script>
 
 <template>
-    <Combobox by="label" :ignore-filter="true" class="w-fit" multiple>
-        <ComboboxAnchor as-child>
-            <ComboboxTrigger as-child>
-                <Button variant="outline" :class="cn('w-fit justify-start text-left', buttonClass)" :disabled="disabled">
-                    <PlusCircleIcon class="mr-2 h-4 w-4" />
-                    <span class="truncate">Select Priority</span>
-                    <template v-if="modelValue.length > 0">
+    <Popover>
+        <!-- trigger button for the dropdown -->
+        <PopoverTrigger as-child>
+            <Button variant="outline" :class="cn('min-w-80 justify-between text-left', buttonClass)" :disabled="disabled">
+                <span class="truncate">Select Priority</span>
+                <div class="ml-2 flex h-full items-center gap-2">
+                    <ChevronsUpDown class="h-4 w-4 shrink-0 opacity-50" />
+                    <!-- show badge with count when items selected -->
+                    <template v-if="selectedPriorityIds.length > 0">
                         <Separator orientation="vertical" class="mx-2" />
-                        <div class="flex space-x-1">
-                            <Badge v-if="selectedPriorityIds.length > 0" variant="secondary" class="rounded-sm px-1 font-normal">
-                                {{ selectedPriorityIds.length }} selected
-                            </Badge>
-                        </div>
+                        <Badge variant="secondary" class="rounded-sm px-1 font-normal"> {{ selectedPriorityIds.length }} selected </Badge>
                     </template>
-                </Button>
-            </ComboboxTrigger>
-        </ComboboxAnchor>
+                </div>
+            </Button>
+        </PopoverTrigger>
 
-        <ComboboxList class="min-w-96" align="start">
-            <div class="relative w-full max-w-sm items-center">
-                <ComboboxInput
-                    class="h-10 rounded-none border-0 border-b pl-9 focus-visible:ring-0"
-                    placeholder="Search Status"
-                    v-model="searchQuery"
-                    :disabled="disabled"
-                />
-                <span class="absolute inset-y-0 start-0 flex items-center justify-center px-3">
-                    <Search class="size-4 text-muted-foreground" />
-                </span>
-            </div>
-
-            <ComboboxEmpty>No results found.</ComboboxEmpty>
-
-            <ComboboxGroup>
-                <ComboboxItem
-                    v-for="status in filteredPriorities"
-                    :key="status.id"
-                    :value="status"
-                    @select="() => togglePrirority(status.id)"
-                    :disabled="disabled"
-                >
-                    <div class="flex flex-1 items-center gap-3">
-                        <div
-                            :class="
-                                cn(
-                                    'flex h-4 w-4 items-center justify-center rounded-sm border border-primary transition-colors',
-                                    isPrioritySelected(status.id) ? 'bg-primary text-primary-foreground' : 'opacity-50 [&_svg]:invisible',
-                                )
-                            "
+        <!-- dropdown content -->
+        <PopoverContent class="min-w-80 p-0" align="start">
+            <Command :disabled="disabled">
+                <CommandInput v-model="searchQuery" placeholder="Search Priority..." />
+                <CommandList>
+                    <CommandEmpty>No results found.</CommandEmpty>
+                    <CommandGroup>
+                        <!-- priority items with checkboxes -->
+                        <CommandItem
+                            v-for="priority in filteredPriorities"
+                            :key="priority.id"
+                            :value="priority.id.toString()"
+                            :disabled="disabled"
+                            @select.prevent="togglePriority(priority.id)"
                         >
-                            <CheckIcon class="h-3 w-3" />
-                        </div>
-                        <span>{{ status.name }}</span>
-                    </div>
-                </ComboboxItem>
-            </ComboboxGroup>
-        </ComboboxList>
-    </Combobox>
+                            <div class="flex flex-1 items-center gap-3">
+                                <!-- custom checkbox design -->
+                                <div
+                                    :class="
+                                        cn(
+                                            'flex h-4 w-4 items-center justify-center rounded-md border border-primary transition-colors',
+                                            isPrioritySelected(priority.id) ? 'bg-primary text-primary-foreground' : 'opacity-50 [&_svg]:invisible',
+                                        )
+                                    "
+                                >
+                                    <CheckIcon class="h-4 w-4" />
+                                </div>
+                                <!-- priority icon if available -->
+                                <component
+                                    v-if="getPriorityIcon(priority.name)"
+                                    :is="getPriorityIcon(priority.name)"
+                                    class="h-4 w-4 text-muted-foreground"
+                                />
+                                <span>{{ priority.name }}</span>
+                            </div>
+                        </CommandItem>
+                    </CommandGroup>
+                </CommandList>
+            </Command>
+        </PopoverContent>
+    </Popover>
 </template>
