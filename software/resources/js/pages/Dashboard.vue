@@ -19,12 +19,25 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+    Pagination,
+    PaginationFirst,
+    PaginationLast,
+    PaginationList,
+    PaginationListItem,
+    PaginationNext,
+    PaginationPrev,
+} from '@/components/ui/pagination';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import AppLayout from '@/layouts/AppLayout.vue';
+import { getBadgeColors } from '@/lib/getBadgeColors';
 import { PaginatedData, Priority, Project, SortDirection, Status, SubTask, Task, User, type BreadcrumbItem } from '@/types';
-import { Head, router } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
+import { format, parseISO } from 'date-fns';
 import { debounce } from 'lodash';
-import { ArrowDown, ArrowUp, ArrowUpDown, ChevronDown, Filter, Search, X } from 'lucide-vue-next';
+import { ChevronDown, Filter, MoveDown, MoveUp, Search, X } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -36,20 +49,20 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 interface Props {
     tasks: PaginatedData<Project | Task | SubTask>;
-    search: string | null;
     users: User[];
     supervisorsAndAdmins: User[];
     statuses: Status[];
     priorities: Priority[];
+    defaultFilters: Filter;
 }
 
 interface Filter {
     search: string;
+    taskTypes: string[];
     supervisorIds: number[];
     assigneeIds: number[];
     viewerIds: number[];
     creatorIds: number[];
-    taskType: string[];
     statusIds: number[];
     priorityIds: number[];
     page: number;
@@ -62,113 +75,170 @@ interface Filter {
 const props = defineProps<Props>();
 
 const filter = ref<Filter>({
-    search: props.search ?? '',
-    supervisorIds: [],
-    assigneeIds: [],
-    viewerIds: [],
-    creatorIds: [],
-    taskType: [],
-    statusIds: [],
-    priorityIds: [],
-    page: 1,
-    perPage: 10,
-    showOverdue: false,
-    sortBy: 'updated_at',
-    sortDirection: 'desc',
+    search: props.defaultFilters.search ?? '',
+    taskTypes: props.defaultFilters.taskTypes ?? [],
+    supervisorIds: props.defaultFilters.supervisorIds ?? [],
+    assigneeIds: props.defaultFilters.assigneeIds ?? [],
+    viewerIds: props.defaultFilters.viewerIds ?? [],
+    creatorIds: props.defaultFilters.creatorIds ?? [],
+    statusIds: props.defaultFilters.statusIds ?? [],
+    priorityIds: props.defaultFilters.priorityIds ?? [],
+    page: props.defaultFilters.page ?? 1,
+    perPage: props.defaultFilters.perPage ?? 10,
+    showOverdue: props.defaultFilters.showOverdue ?? false,
+    sortBy: props.defaultFilters.sortBy ?? 'updated_at',
+    sortDirection: props.defaultFilters.sortDirection ?? 'asc',
 });
+
+// state to show filters collapsible
 const showFilters = ref(false);
 
+// function to fetch data with filters
 const fetchTasks = () => {
     router.get(
         route('dashboard'),
         {
             search: filter.value.search,
-            page: filter.value.page,
+            taskTypes: filter.value.taskTypes,
+            statusIds: filter.value.statusIds,
+            priorityIds: filter.value.priorityIds,
             supervisorIds: filter.value.supervisorIds,
             assigneeIds: filter.value.assigneeIds,
             viewerIds: filter.value.viewerIds,
             creatorIds: filter.value.creatorIds,
-            taskType: filter.value.taskType,
-            statusIds: filter.value.statusIds,
-            priorityIds: filter.value.priorityIds,
-            perPage: filter.value.perPage,
             showOverdue: filter.value.showOverdue,
             sortBy: filter.value.sortBy,
             sortDirection: filter.value.sortDirection,
+            page: filter.value.page,
+            perPage: filter.value.perPage,
         },
         { preserveState: true, replace: true, preserveScroll: true },
     );
 };
 
-const toggleFilters = () => {
+const toggleShowFilters = () => {
     showFilters.value = !showFilters.value;
 };
 
+// available sort options
 const sortOptions = [
-    { label: 'Priority', value: 'priority' },
-    { label: 'Status', value: 'status' },
+    { label: 'Priority', value: 'priority_id' },
+    { label: 'Status', value: 'status_id' },
     { label: 'Updated At', value: 'updated_at' },
     { label: 'Due Date', value: 'due_date' },
 ];
 
-const selectOption = (optionValue: string, dir: SortDirection) => {
+// function to select sort by and sort direction
+const selectSortOption = (optionValue: string, dir: SortDirection) => {
     filter.value.sortBy = optionValue;
     filter.value.sortDirection = dir;
+    filter.value.page = 1;
+    fetchTasks();
 };
 
-// const currentSortLabel = computed(() => {
-//     return sortOptions.find((option) => option.value === filter.value.sortBy)?.label || 'Sort By';
-// });
-
-const isSelected = (optionValue: string, dir: SortDirection) => {
+// function to check if a sort by and sort direction is selected
+const isSortOptionSelected = (optionValue: string, dir: SortDirection) => {
     return filter.value.sortBy === optionValue && filter.value.sortDirection === dir;
 };
 
+// function to check if there are active filters
 const hasActiveFilters = computed(() => {
     return (
+        filter.value.taskTypes.length > 0 ||
+        filter.value.statusIds.length > 0 ||
+        filter.value.priorityIds.length > 0 ||
         filter.value.supervisorIds.length > 0 ||
         filter.value.assigneeIds.length > 0 ||
-        filter.value.taskType.length > 0 ||
-        filter.value.statusIds.length > 0 ||
-        filter.value.priorityIds.length > 0
+        filter.value.viewerIds.length > 0 ||
+        filter.value.creatorIds.length > 0 ||
+        filter.value.showOverdue
     );
 });
 
+// function to fetch tasks if the search query changes, debounce the function to stop hammering backend
 const changeSearch = debounce(() => {
+    filter.value.page = 1;
     fetchTasks();
 }, 500);
 
+const applyFilters = () => {
+    filter.value.page = 1;
+    fetchTasks();
+};
+
+// function to reset all filters
 const clearFilters = () => {
     filter.value.supervisorIds = [];
     filter.value.assigneeIds = [];
     filter.value.viewerIds = [];
     filter.value.creatorIds = [];
-    filter.value.taskType = [];
+    filter.value.taskTypes = [];
     filter.value.statusIds = [];
     filter.value.priorityIds = [];
-    fetchTasks();
+    filter.value.showOverdue = false;
 };
 
+// function to return number of applied filters
 const filtersLength = () => {
+    const countForOverdue = filter.value.showOverdue ? 1 : 0;
     return (
         filter.value.supervisorIds.length +
         filter.value.assigneeIds.length +
-        filter.value.taskType.length +
+        filter.value.viewerIds.length +
+        filter.value.creatorIds.length +
+        filter.value.taskTypes.length +
         filter.value.statusIds.length +
-        filter.value.priorityIds.length
+        filter.value.priorityIds.length +
+        countForOverdue
     );
+};
+
+// state to store current sort by
+const currentSortOption = computed(() => {
+    const option = sortOptions.find((opt) => opt.value === filter.value.sortBy);
+    return option ? option.label : 'Sort By';
+});
+
+// update page number and then fetch data
+const updatePage = (newPage: number) => {
+    filter.value.page = newPage;
+    fetchTasks();
+};
+
+// change per page data
+const changePerPage = (newPerPage: number) => {
+    filter.value.perPage = newPerPage;
+    // reset to first page when changing items per page
+    filter.value.page = 1;
+    fetchTasks();
+};
+
+const getTaskLink = (slug: string, id: number) => {
+    if (slug.startsWith('PRO')) {
+        return route('projects.show', id);
+    } else if (slug.startsWith('TASK')) {
+        return route('tasks.show', id);
+    } else {
+        return route('sub-tasks.show', id);
+    }
+};
+
+const perPageOptions = [10, 25, 50, 100];
+
+const readableDate = (isoDate: string) => {
+    const date = parseISO(isoDate);
+    return format(date, 'do MMM, yyyy');
 };
 </script>
 
 <template>
     <Head title="Dashboard" />
     <AppLayout :breadcrumbs="breadcrumbs">
-        <!-- TODO: shift the layout code to app layout -->
         <div class="container mx-auto space-y-6 px-4 py-6">
             <!-- search, filters and sorting -->
             <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <!-- search input -->
-                <div class="relative max-w-md flex-1">
+                <div class="relative max-w-sm flex-1">
                     <Input v-model="filter.search" placeholder="Search tasks..." class="pl-9" @update:model-value="changeSearch" />
                     <span class="absolute inset-y-0 start-0 flex items-center justify-center px-3">
                         <Search class="size-4 text-muted-foreground" />
@@ -177,47 +247,52 @@ const filtersLength = () => {
 
                 <div class="flex items-center gap-2">
                     <!-- filters button -->
-                    <Button variant="outline" size="sm" class="flex items-center gap-2" @click="toggleFilters">
+                    <Button variant="outline" @click="toggleShowFilters">
                         <Filter class="h-4 w-4" />
                         Filters
                         <template v-if="filtersLength() > 0">
+                            <Separator orientation="vertical" class="mx-2 h-4" />
                             <Badge>
                                 {{ filtersLength() }}
                             </Badge>
                         </template>
                     </Button>
 
-                    <!-- sorting dropdown -->
+                    <!-- sorting dropdown with selected label and direction icon -->
                     <DropdownMenu>
                         <DropdownMenuTrigger as-child>
-                            <Button variant="outline" class="flex items-center gap-2">
-                                <ArrowUpDown class="h-4 w-4" />
-                                <span>{{ filter.sortBy }}</span>
-                                <ChevronDown class="ml-1 h-4 w-4" />
+                            <Button variant="outline">
+                                <template v-if="filter.sortDirection === 'asc'">
+                                    <MoveUp class="h-4 w-4" />
+                                </template>
+                                <template v-else>
+                                    <MoveDown class="h-4 w-4" />
+                                </template>
+                                <span>{{ currentSortOption }}</span>
+                                <ChevronDown class="ml-2 h-4 w-4" />
                             </Button>
                         </DropdownMenuTrigger>
 
-                        <DropdownMenuContent class="w-48">
+                        <DropdownMenuContent align="end" class="w-48">
                             <DropdownMenuLabel>Sort Options</DropdownMenuLabel>
                             <DropdownMenuSeparator />
-
-                            <DropdownMenuSub v-for="option in sortOptions" :key="option.value">
-                                <DropdownMenuSubTrigger :class="{ 'bg-accent': filter.sortBy === option.value }">
-                                    <span>{{ option.label }}</span>
+                            <DropdownMenuSub v-for="sortOption in sortOptions" :key="sortOption.value">
+                                <DropdownMenuSubTrigger :class="{ 'bg-accent': filter.sortBy === sortOption.value }">
+                                    <span>{{ sortOption.label }}</span>
                                 </DropdownMenuSubTrigger>
                                 <DropdownMenuSubContent>
                                     <DropdownMenuItem
-                                        @click="selectOption(option.value, 'asc')"
-                                        :class="{ 'bg-accent': isSelected(option.value, 'asc') }"
+                                        @click="selectSortOption(sortOption.value, 'asc')"
+                                        :class="{ 'bg-accent': isSortOptionSelected(sortOption.value, 'asc') }"
                                     >
-                                        <ArrowUp class="mr-2 h-4 w-4" />
+                                        <MoveUp class="mr-2 h-4 w-4" />
                                         <span>Ascending</span>
                                     </DropdownMenuItem>
                                     <DropdownMenuItem
-                                        @click="selectOption(option.value, 'desc')"
-                                        :class="{ 'bg-accent': isSelected(option.value, 'desc') }"
+                                        @click="selectSortOption(sortOption.value, 'desc')"
+                                        :class="{ 'bg-accent': isSortOptionSelected(sortOption.value, 'desc') }"
                                     >
-                                        <ArrowDown class="mr-2 h-4 w-4" />
+                                        <MoveDown class="mr-2 h-4 w-4" />
                                         <span>Descending</span>
                                     </DropdownMenuItem>
                                 </DropdownMenuSubContent>
@@ -230,84 +305,155 @@ const filtersLength = () => {
             <!-- filters panel -->
             <Collapsible v-model:open="showFilters">
                 <CollapsibleContent>
-                    <div class="rounded-lg border bg-muted/40 p-4">
+                    <div class="rounded-lg border bg-muted/50 p-4">
                         <div class="mb-4 flex items-center justify-between">
                             <h3 class="text-lg font-medium">Filters</h3>
                             <div class="flex items-center gap-2">
-                                <Button
-                                    v-if="hasActiveFilters"
-                                    variant="ghost"
-                                    size="sm"
-                                    class="flex items-center gap-1 text-muted-foreground"
-                                    @click="clearFilters"
-                                >
-                                    <X class="h-3 w-3" />
+                                <Button v-if="hasActiveFilters" variant="ghost" class="text-muted-foreground" @click="clearFilters">
+                                    <X class="h-4 w-4" />
                                     Clear all
                                 </Button>
                                 <CollapsibleTrigger as-child>
-                                    <Button variant="ghost" size="sm" class="text-muted-foreground">
+                                    <Button variant="ghost" class="text-muted-foreground">
                                         <X class="h-4 w-4" />
                                     </Button>
                                 </CollapsibleTrigger>
                             </div>
                         </div>
 
-                        <div class="mb-4 flex flex-wrap gap-4">
-                            <MultiTaskTypeSelector v-model="filter.taskType" />
+                        <div class="mb-8 flex flex-wrap gap-4">
+                            <MultiTaskTypeSelector v-model="filter.taskTypes" />
                             <MultiStatusSelector v-model="filter.statusIds" :statuses="statuses" />
                             <MultiPrioritySelector v-model="filter.priorityIds" :priorities="priorities" />
                             <MultiUserSelector v-model="filter.supervisorIds" :users="supervisorsAndAdmins" placeholder="Select Supervisors" />
                             <MultiUserSelector v-model="filter.assigneeIds" :users="users" placeholder="Select Assignees" />
+                            <MultiUserSelector v-model="filter.creatorIds" :users="supervisorsAndAdmins" placeholder="Select Creators" />
+                            <MultiUserSelector v-model="filter.viewerIds" :users="users" placeholder="Select Viewers" />
                         </div>
-                        <div class="mb-4 flex items-center space-x-2">
+                        <div class="mb-8 flex items-center space-x-2">
                             <Switch id="overdue-switch" v-model="filter.showOverdue" />
                             <Label for="overdue-switch">Filter to overdue tasks only</Label>
                         </div>
                         <div>
-                            <Button @click="fetchTasks">Apply Filters</Button>
+                            <Button @click="applyFilters">Apply Filters</Button>
                         </div>
                     </div>
                 </CollapsibleContent>
             </Collapsible>
 
             <!-- Tasks table -->
-            <div class="rounded-md border">
-                <div class="overflow-x-auto">
-                    <table class="w-full text-sm">
+            <div class="rounded-md border shadow-sm">
+                <div class="relative max-h-[40rem] overflow-auto rounded-md">
+                    <table class="w-full border-separate border-spacing-0 whitespace-nowrap text-sm">
                         <thead>
-                            <tr class="border-b bg-muted/50">
-                                <th class="px-4 py-3 text-left font-medium text-muted-foreground">Task</th>
-                                <th class="px-4 py-3 text-left font-medium text-muted-foreground">Slug</th>
-                                <th class="px-4 py-3 text-left font-medium text-muted-foreground">Priority</th>
-                                <th class="px-4 py-3 text-left font-medium text-muted-foreground">Status</th>
-                                <th class="px-4 py-3 text-left font-medium text-muted-foreground">Due Date</th>
+                            <tr class="bg-muted">
+                                <th class="sticky left-0 top-0 z-30 border-b border-r px-4 py-3 text-left font-bold text-muted-foreground">
+                                    Task
+                                </th>
+                                <th class="sticky top-0 z-20 border-b px-4 py-3 text-left font-bold text-muted-foreground">Slug</th>
+                                <th class="sticky top-0 z-20 border-b px-4 py-3 text-left font-bold text-muted-foreground">Priority</th>
+                                <th class="sticky top-0 z-20 border-b px-4 py-3 text-left font-bold text-muted-foreground">Status</th>
+                                <th class="sticky top-0 z-20 border-b px-4 py-3 text-left font-bold text-muted-foreground">Due Date</th>
+                                <th class="sticky top-0 z-20 border-b px-4 py-3 text-left font-bold text-muted-foreground">
+                                    Last Updated At
+                                </th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr v-for="task in tasks.data" :key="task.slug" class="border-b hover:bg-muted/20">
-                                <td class="px-4 py-3 font-medium">{{ task.name }}</td>
-                                <td class="px-4 py-3 text-muted-foreground">{{ task.slug }}</td>
-                                <td class="px-4 py-3">
-                                    <span :class="['inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium']">
-                                        {{ task.priority?.name }}
-                                    </span>
-                                </td>
-                                <td class="px-4 py-3">
-                                    <span
-                                        class="inline-flex items-center rounded-full bg-secondary px-2.5 py-0.5 text-xs font-medium text-secondary-foreground"
+                            <!-- task rows -->
+                            <tr v-for="task in tasks.data" :key="task.slug" class="group transition-colors hover:bg-muted/50">
+                                <td
+                                    class="sticky left-0 z-10 max-w-md whitespace-normal border-b border-r bg-background p-0 transition-colors group-hover:bg-muted group-hover:text-blue-500"
+                                >
+                                    <Link
+                                        :href="getTaskLink(task.slug, task.id)"
+                                        class="block h-full w-full px-4 py-3 font-medium focus-visible:border focus-visible:border-primary focus-visible:text-blue-500 focus-visible:outline-none"
                                     >
+                                        {{ task.name }}
+                                    </Link>
+                                </td>
+
+                                <Link as="td" :href="getTaskLink(task.slug, task.id)" class="cursor-pointer border-b px-4 py-3 text-muted-foreground">
+                                    {{ task.slug }}
+                                </Link>
+
+                                <Link as="td" :href="getTaskLink(task.slug, task.id)" class="cursor-pointer border-b px-4 py-3">
+                                    <Badge :class="getBadgeColors(task.priority?.color)">
+                                        {{ task.priority?.name }}
+                                    </Badge>
+                                </Link>
+
+                                <Link as="td" :href="getTaskLink(task.slug, task.id)" class="cursor-pointer border-b px-4 py-3">
+                                    <Badge :class="getBadgeColors(task.status?.color)">
                                         {{ task.status?.name }}
-                                    </span>
-                                </td>
-                                <td class="px-4 py-3 text-muted-foreground">
-                                    {{ task.due_date || 'Not set' }}
-                                </td>
+                                    </Badge>
+                                </Link>
+                                <Link as="td" :href="getTaskLink(task.slug, task.id)" class="cursor-pointer border-b px-4 py-3 text-muted-foreground">
+                                    {{ readableDate(task.due_date) }}
+                                </Link>
+                                <Link as="td" :href="getTaskLink(task.slug, task.id)" class="cursor-pointer border-b px-4 py-3 text-muted-foreground">
+                                    {{ readableDate(task.updated_at) }}
+                                </Link>
                             </tr>
+
+                            <!-- empty state -->
                             <tr v-if="tasks.data.length === 0">
-                                <td colspan="5" class="px-4 py-8 text-center text-muted-foreground">No tasks found. Try adjusting your filters.</td>
+                                <td colspan="6" class="px-4 py-8 text-center text-muted-foreground">No tasks found. Try adjusting your filters.</td>
                             </tr>
                         </tbody>
                     </table>
+                </div>
+
+                <!-- Pagination -->
+                <div class="flex items-center justify-between border-t px-4 py-3">
+                    <div class="text-sm text-muted-foreground">
+                        Showing <span class="font-medium">{{ tasks.from }}</span> to <span class="font-medium">{{ tasks.to }}</span> of
+                        <span class="font-medium">{{ tasks.total }}</span> results
+                    </div>
+
+                    <div class="flex items-center gap-4">
+                        <div class="flex items-center gap-2">
+                            <span class="text-sm text-muted-foreground">Items per page:</span>
+                            <Select v-model="filter.perPage" @update:model-value="(e) => changePerPage(e as number)">
+                                <SelectTrigger class="w-20">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectGroup>
+                                        <SelectItem v-for="option in perPageOptions" :key="option" :value="option">
+                                            {{ option }}
+                                        </SelectItem>
+                                    </SelectGroup>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <Pagination
+                            v-slot="{ page }"
+                            v-model:page="filter.page"
+                            :items-per-page="tasks.per_page"
+                            :total="tasks.total"
+                            :sibling-count="0"
+                            show-edges
+                            :default-page="tasks.current_page"
+                            @update:page="(e) => updatePage(e)"
+                        >
+                            <PaginationList v-slot="{ items }" class="flex items-center gap-1">
+                                <PaginationFirst />
+                                <PaginationPrev />
+
+                                <template v-for="(item, index) in items">
+                                    <PaginationListItem v-if="item.type === 'page'" :key="index" :value="item.value" as-child>
+                                        <Button class="h-9 w-9 p-0" :variant="item.value === page ? 'default' : 'outline'">
+                                            {{ item.value }}
+                                        </Button>
+                                    </PaginationListItem>
+                                </template>
+
+                                <PaginationNext />
+                                <PaginationLast />
+                            </PaginationList>
+                        </Pagination>
+                    </div>
                 </div>
             </div>
         </div>
