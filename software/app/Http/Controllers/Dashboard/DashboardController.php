@@ -20,61 +20,96 @@ class DashboardController extends Controller
 {
     public function index(Request $request)
     {
+        // get user
         $user = auth()->user();
-
+        // get all filters
         $search = $request->input('search');
-        $statusFilter = $request->input('status_ids', []);
-        $priorityFilter = $request->input('priority_ids', []);
-        $supervisorFilter = $request->input('supervisor_ids', []);
-        $creatorFilter = request('creator_ids', []);
-        $assigneeFilter = request('assignee_id', []);
-        $viewerFilter = request('viewer_id', []);
-        $perPage = request('per_page', 10);
-        $overdueFilter = request('overdue', false);
+        $statusIds = array_map('intval', $request->array('statusIds'));
+        $priorityIds = array_map('intval', $request->array('priorityIds'));
+        $supervisorIds = array_map('intval', $request->array('supervisorIds'));
+        $creatorIds = array_map('intval', $request->array('creatorIds'));
+        $assigneeIds = array_map('intval', $request->array('assigneeIds'));
+        $viewerIds = array_map('intval', $request->array('viewerIds'));
+        $perPage = $request->integer('perPage', 10);
+        $showOverdue = $request->boolean('showOverdue', false);
+        $sortBy = $request->input('sortBy', 'updated_at');
+        $sortDirection = $request->input('sortDirection', 'asc');
+        $taskTypes = $request->array('taskTypes');
 
-        $sortBy = $request->input('sort_by', 'updated_at'); // Default sort by due_date
-        $sortDirection = $request->input('sort_direction', 'asc'); // Default ascending
-
-        // Validate sort field
+        // validate sort by filter, it should only belong from these 4 values
         $allowedSortFields = ['due_date', 'updated_at', 'status_id', 'priority_id'];
-        if (! in_array($sortBy, $allowedSortFields)) {
-            $sortBy = 'due_date'; // Fallback to default if invalid
+        if (!in_array($sortBy, $allowedSortFields)) {
+            $sortBy = 'updated_at'; // Fallback to default if invalid
         }
-
-        // Validate sort direction
+        // validate sort direction
         $sortDirection = strtolower($sortDirection) === 'desc' ? 'desc' : 'asc';
 
-        // Get filtered data from each model
-        $projects = $this->getFilteredProjects($user, $search, $statusFilter, $priorityFilter, $supervisorFilter, $creatorFilter, $assigneeFilter, $viewerFilter, $overdueFilter);
-        $tasks = $this->getFilteredTasks($user, $search, $statusFilter, $priorityFilter, $supervisorFilter, $creatorFilter, $assigneeFilter, $viewerFilter, $overdueFilter);
-        $subTasks = $this->getFilteredSubTasks($user, $search, $statusFilter, $priorityFilter, $supervisorFilter, $creatorFilter, $assigneeFilter, $viewerFilter, $overdueFilter);
+        $query = null;
 
-        $temp = $projects->union($tasks)->union($subTasks)->orderBy($sortBy, $sortDirection)->paginate($perPage);
+        // to check if we need a certain task type
+        $getProjects = empty($taskTypes) || in_array('project', $taskTypes);
+        $getTasks = empty($taskTypes) || in_array('task', $taskTypes);
+        $getSubTasks = empty($taskTypes) || in_array('sub-task', $taskTypes);
+
+        // get projects and add to query
+        if ($getProjects) {
+            $projects = $this->getFilteredProjects($user, $search, $statusIds, $priorityIds, $supervisorIds, $creatorIds, $assigneeIds, $viewerIds, $showOverdue);
+            $query = $projects;
+        }
+
+        // get tasks and add to query
+        if ($getTasks) {
+            $tasks = $this->getFilteredTasks($user, $search, $statusIds, $priorityIds, $supervisorIds, $creatorIds, $assigneeIds, $viewerIds, $showOverdue);
+            $query = $query ? $query->union($tasks) : $tasks;
+        }
+
+        // get sub tasks and add to query
+        if ($getSubTasks) {
+            $subTasks = $this->getFilteredSubTasks($user, $search, $statusIds, $priorityIds, $supervisorIds, $creatorIds, $assigneeIds, $viewerIds, $showOverdue);
+            $query = $query ? $query->union($subTasks) : $subTasks;
+        }
+
+        // get records by combining query and sorting and paginating the data
+        $records = $query->orderBy($sortBy, $sortDirection)->paginate($perPage);
 
         return Inertia::render('Dashboard', [
-            'tasks' => $temp,
+            'tasks' => $records,
             'search' => $search,
             'supervisorsAndAdmins' => User::getAllSupervisorsAndAdmins()->get(),
             'users' => User::all(),
             'statuses' => Status::all(),
             'priorities' => Priority::all(),
+            'defaultFilters' => [
+                'search' => $search,
+                'statusIds' => $statusIds,
+                'priorityIds' => $priorityIds,
+                'supervisorIds' => $supervisorIds,
+                'creatorIds' => $creatorIds,
+                'assigneeIds' => $assigneeIds,
+                'viewerIds' => $viewerIds,
+                'showOverdue' => $showOverdue,
+                'perPage' => $perPage,
+                'sortBy' => $sortBy,
+                'sortDirection' => $sortDirection,
+                'taskTypes' => $taskTypes
+            ]
         ]);
     }
 
-    private function getFilteredProjects($user, $searchQuery, $statusFilter, $priorityFilter, $supervisorFilter, $creatorFilter, $assigneeFilter, $viewerFilter, $overdueFilter)
+    private function getFilteredProjects($user, $searchQuery, $statusIds, $priorityIds, $supervisorIds, $creatorIds, $assigneeIds, $viewerIds, $showOverdue)
     {
         $query = Project::with(['status', 'priority']);
 
-        // Apply access control for non-admin/supervisor users
-        if (! $user->hasRole([UserRole::Admin, UserRole::Supervisor])) {
+        // apply access control for non-admin/supervisor users
+        if (!$user->hasRole([UserRole::Admin, UserRole::Supervisor])) {
             $query->where(function ($q) use ($user) {
                 $q->where('is_private', false)
-                    ->orWhereHas('assignees', fn ($subquery) => $subquery->where('user_id', $user->id))
-                    ->orWhereHas('viewers', fn ($subquery) => $subquery->where('user_id', $user->id));
+                    ->orWhereHas('assignees', fn($subquery) => $subquery->where('user_id', $user->id))
+                    ->orWhereHas('viewers', fn($subquery) => $subquery->where('user_id', $user->id));
             });
         }
 
-        // Apply various filters
+        // apply various filters
         if ($searchQuery) {
             $query->where(function ($q) use ($searchQuery) {
                 $q->where('name', 'like', "%{$searchQuery}%")
@@ -82,36 +117,37 @@ class DashboardController extends Controller
             });
         }
 
-        if (! empty($statusFilter)) {
-            $query->whereIn('status_id', $statusFilter);
+        if (!empty($statusIds)) {
+            $query->whereIn('status_id', $statusIds);
         }
 
-        if (! empty($priorityFilter)) {
-            $query->whereIn('priority_id', $priorityFilter);
+        if (!empty($priorityIds)) {
+            $query->whereIn('priority_id', $priorityIds);
         }
 
-        if (! empty($supervisorFilter)) {
-            $query->whereIn('supervisor_id', $supervisorFilter);
+        if (!empty($supervisorIds)) {
+            $query->whereIn('supervisor_id', $supervisorIds);
         }
 
-        if (! empty($assigneeFilter)) {
-            $query->whereHas('assignees', function ($q) use ($assigneeFilter) {
-                $q->whereIn('user_id', $assigneeFilter);
+        if (!empty($assigneeIds)) {
+            $query->whereHas('assignees', function ($q) use ($assigneeIds) {
+                $q->whereIn('user_id', $assigneeIds);
             });
         }
 
-        if (! empty($viewerFilter)) {
-            $query->whereHas('viewers', function ($q) use ($viewerFilter) {
-                $q->whereIn('user_id', $viewerFilter);
+        if (!empty($viewerIds)) {
+            $query->whereHas('viewers', function ($q) use ($viewerIds) {
+                $q->whereIn('user_id', $viewerIds);
             });
         }
 
-        if (! empty($creatorFilter)) {
-            $query->whereIn('created_by', $creatorFilter);
+        if (!empty($creatorIds)) {
+            $query->whereIn('created_by', $creatorIds);
         }
 
-        // Apply overdue filter - items with due_date in the past and not done/cancelled
-        if ($overdueFilter) {
+        // apply overdue filter - items with due_date in the past and not done
+        // TODO: after adding cancelled fix this query
+        if ($showOverdue) {
             $today = Carbon::now()->startOfDay();
             $query->where('due_date', '<', $today)
                 ->whereHas('status', function ($q) {
@@ -127,6 +163,8 @@ class DashboardController extends Controller
             'status',
             'priority_id',
             'priority',
+            'start_date',
+            'due_date',
             'updated_at',
             DB::raw('NULL as project_id'),
             DB::raw('NULL as task_id'),
@@ -134,16 +172,16 @@ class DashboardController extends Controller
     }
 
     // Similar functions for tasks and subtasks
-    private function getFilteredTasks($user, $searchQuery, $statusFilter, $priorityFilter, $supervisorFilter, $creatorFilter, $assigneeFilter, $viewerFilter, $overdueFilter)
+    private function getFilteredTasks($user, $searchQuery, $statusFilter, $priorityFilter, $supervisorFilter, $creatorIds, $assigneeIds, $viewerIds, $showOverdue)
     {
         $query = Task::with(['status', 'priority']);
 
         // Access control
-        if (! $user->hasRole([UserRole::Admin, UserRole::Supervisor])) {
+        if (!$user->hasRole([UserRole::Admin, UserRole::Supervisor])) {
             $query->where(function ($q) use ($user) {
                 $q->where('is_private', false)
-                    ->orWhereHas('assignees', fn ($subquery) => $subquery->where('user_id', $user->id))
-                    ->orWhereHas('viewers', fn ($subquery) => $subquery->where('user_id', $user->id));
+                    ->orWhereHas('assignees', fn($subquery) => $subquery->where('user_id', $user->id))
+                    ->orWhereHas('viewers', fn($subquery) => $subquery->where('user_id', $user->id));
             });
         }
 
@@ -154,36 +192,37 @@ class DashboardController extends Controller
             });
         }
 
-        if (! empty($statusFilter)) {
+        if (!empty($statusFilter)) {
             $query->whereIn('status_id', $statusFilter);
         }
 
-        if (! empty($priorityFilter)) {
+        if (!empty($priorityFilter)) {
             $query->whereIn('priority_id', $priorityFilter);
         }
 
-        if (! empty($supervisorFilter)) {
+        if (!empty($supervisorFilter)) {
             $query->whereIn('supervisor_id', $supervisorFilter);
         }
 
-        if (! empty($assigneeFilter)) {
-            $query->whereHas('assignees', function ($q) use ($assigneeFilter) {
-                $q->whereIn('user_id', $assigneeFilter);
+        if (!empty($assigneeIds)) {
+            $query->whereHas('assignees', function ($q) use ($assigneeIds) {
+                $q->whereIn('user_id', $assigneeIds);
             });
         }
 
-        if (! empty($viewerFilter)) {
-            $query->whereHas('viewers', function ($q) use ($viewerFilter) {
-                $q->whereIn('user_id', $viewerFilter);
+        if (!empty($viewerIds)) {
+            $query->whereHas('viewers', function ($q) use ($viewerIds) {
+                $q->whereIn('user_id', $viewerIds);
             });
         }
 
-        if (! empty($creatorFilter)) {
-            $query->whereIn('created_by', $creatorFilter);
+        if (!empty($creatorIds)) {
+            $query->whereIn('created_by', $creatorIds);
         }
 
-        // Apply overdue filter - items with due_date in the past and not done/cancelled
-        if ($overdueFilter) {
+        // Apply overdue filter - items with due_date in the past and not done
+        // TODO: after adding cancelled fix this query
+        if ($showOverdue) {
             $today = Carbon::now()->startOfDay();
             $query->where('due_date', '<', $today)
                 ->whereHas('status', function ($q) {
@@ -199,22 +238,24 @@ class DashboardController extends Controller
             'status',
             'priority_id',
             'priority',
+            'start_date',
+            'due_date',
             'updated_at',
             'project_id',
             DB::raw('NULL as task_id'),
         ]);
     }
 
-    private function getFilteredSubTasks($user, $searchQuery, $statusFilter, $priorityFilter, $supervisorFilter, $creatorFilter, $assigneeFilter, $viewerFilter, $overdueFilter)
+    private function getFilteredSubTasks($user, $searchQuery, $statusFilter, $priorityFilter, $supervisorFilter, $creatorIds, $assigneeIds, $viewerIds, $showOverdue)
     {
         $query = SubTask::with(['status', 'priority']);
 
-        // Access control
-        if (! $user->hasRole([UserRole::Admin, UserRole::Supervisor])) {
+        // access control
+        if (!$user->hasRole([UserRole::Admin, UserRole::Supervisor])) {
             $query->where(function ($q) use ($user) {
                 $q->where('is_private', false)
-                    ->orWhereHas('assignees', fn ($subquery) => $subquery->where('user_id', $user->id))
-                    ->orWhereHas('viewers', fn ($subquery) => $subquery->where('user_id', $user->id));
+                    ->orWhereHas('assignees', fn($subquery) => $subquery->where('user_id', $user->id))
+                    ->orWhereHas('viewers', fn($subquery) => $subquery->where('user_id', $user->id));
             });
         }
 
@@ -225,36 +266,37 @@ class DashboardController extends Controller
             });
         }
 
-        if (! empty($statusFilter)) {
+        if (!empty($statusFilter)) {
             $query->whereIn('status_id', $statusFilter);
         }
 
-        if (! empty($priorityFilter)) {
+        if (!empty($priorityFilter)) {
             $query->whereIn('priority_id', $priorityFilter);
         }
 
-        if (! empty($supervisorFilter)) {
+        if (!empty($supervisorFilter)) {
             $query->whereIn('supervisor_id', $supervisorFilter);
         }
 
-        if (! empty($assigneeFilter)) {
-            $query->whereHas('assignees', function ($q) use ($assigneeFilter) {
-                $q->whereIn('user_id', $assigneeFilter);
+        if (!empty($assigneeIds)) {
+            $query->whereHas('assignees', function ($q) use ($assigneeIds) {
+                $q->whereIn('user_id', $assigneeIds);
             });
         }
 
-        if (! empty($viewerFilter)) {
-            $query->whereHas('viewers', function ($q) use ($viewerFilter) {
-                $q->whereIn('user_id', $viewerFilter);
+        if (!empty($viewerIds)) {
+            $query->whereHas('viewers', function ($q) use ($viewerIds) {
+                $q->whereIn('user_id', $viewerIds);
             });
         }
 
-        if (! empty($creatorFilter)) {
-            $query->whereIn('created_by', $creatorFilter);
+        if (!empty($creatorIds)) {
+            $query->whereIn('created_by', $creatorIds);
         }
 
-        // Apply overdue filter - items with due_date in the past and not done/cancelled
-        if ($overdueFilter) {
+        // Apply overdue filter - items with due_date in the past and not done
+        // TODO: after adding cancelled fix this query
+        if ($showOverdue) {
             $today = Carbon::now()->startOfDay();
             $query->where('due_date', '<', $today)
                 ->whereHas('status', function ($q) {
@@ -270,6 +312,8 @@ class DashboardController extends Controller
             'status',
             'priority_id',
             'priority',
+            'start_date',
+            'due_date',
             'updated_at',
             DB::raw('NULL as project_id'),
             'task_id',
