@@ -1,33 +1,42 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button';
+import { statusIcons } from '@/lib/statusIcons';
 import { cn } from '@/lib/utils';
 import { Status } from '@/types';
-import { CheckIcon, PlusCircleIcon, Search } from 'lucide-vue-next';
+import { CheckIcon, ChevronsUpDown } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
 import { Badge } from './ui/badge';
-import { Combobox, ComboboxAnchor, ComboboxEmpty, ComboboxGroup, ComboboxInput, ComboboxItem, ComboboxList, ComboboxTrigger } from './ui/combobox';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from './ui/command';
+import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import { Separator } from './ui/separator';
 
+// component props definition
 interface Props {
     statuses: Status[];
     disabled?: boolean;
     buttonClass?: string;
 }
 
+// set default values for optional props
 const props = withDefaults(defineProps<Props>(), {
     disabled: false,
 });
 
+// two-way binding for selected status ids
 const selectedStatusIds = defineModel<number[]>({ required: true });
+
+// search input state
 const searchQuery = ref('');
 
+// filter statuses based on search query
 const filteredStatuses = computed(() => {
-    // filters users based on the search query
     return props.statuses.filter((status) => status.name?.toLowerCase().includes(searchQuery.value.toLowerCase()));
 });
 
-const isUserSelected = (statusId: number) => selectedStatusIds.value.includes(statusId);
+// check if a status is currently selected
+const isStatusSelected = (statusId: number) => selectedStatusIds.value.includes(statusId);
 
+// toggle status selection state
 const toggleStatus = (statusId: number) => {
     const index = selectedStatusIds.value.indexOf(statusId);
     if (index === -1) {
@@ -37,65 +46,65 @@ const toggleStatus = (statusId: number) => {
     }
     searchQuery.value = '';
 };
+
+// get icon component for status if available
+const getStatusIcon = (statusName: Status['name']) => {
+    return statusName && statusIcons[statusName] ? statusIcons[statusName] : null;
+};
 </script>
 
 <template>
-    <Combobox by="label" :ignore-filter="true" class="w-fit" multiple>
-        <ComboboxAnchor as-child>
-            <ComboboxTrigger as-child>
-                <Button variant="outline" :class="cn('w-fit justify-start text-left', buttonClass)" :disabled="disabled">
-                    <PlusCircleIcon class="mr-2 h-4 w-4" />
-                    <span class="truncate">Select Status</span>
-                    <template v-if="modelValue.length > 0">
+    <Popover>
+        <!-- trigger button for the dropdown -->
+        <PopoverTrigger as-child>
+            <Button variant="outline" :class="cn('min-w-80 justify-between text-left', buttonClass)" :disabled="disabled">
+                <span class="truncate">Select Status</span>
+                <div class="ml-2 flex h-full items-center gap-2">
+                    <ChevronsUpDown class="h-4 w-4 shrink-0 opacity-50" />
+                    <!-- show badge with count when items selected -->
+                    <template v-if="selectedStatusIds.length > 0">
                         <Separator orientation="vertical" class="mx-2" />
-                        <div class="flex space-x-1">
-                            <Badge v-if="selectedStatusIds.length > 0" variant="secondary" class="rounded-sm px-1 font-normal">
-                                {{ selectedStatusIds.length }} selected
-                            </Badge>
-                        </div>
+                        <Badge variant="secondary" class="rounded-sm px-1 font-normal"> {{ selectedStatusIds.length }} selected </Badge>
                     </template>
-                </Button>
-            </ComboboxTrigger>
-        </ComboboxAnchor>
+                </div>
+            </Button>
+        </PopoverTrigger>
 
-        <ComboboxList class="min-w-96" align="start">
-            <div class="relative w-full max-w-sm items-center">
-                <ComboboxInput
-                    class="h-10 rounded-none border-0 border-b pl-9 focus-visible:ring-0"
-                    placeholder="Search Status"
-                    v-model="searchQuery"
-                    :disabled="disabled"
-                />
-                <span class="absolute inset-y-0 start-0 flex items-center justify-center px-3">
-                    <Search class="size-4 text-muted-foreground" />
-                </span>
-            </div>
-
-            <ComboboxEmpty>No results found.</ComboboxEmpty>
-
-            <ComboboxGroup>
-                <ComboboxItem
-                    v-for="status in filteredStatuses"
-                    :key="status.id"
-                    :value="status"
-                    @select="() => toggleStatus(status.id)"
-                    :disabled="disabled"
-                >
-                    <div class="flex flex-1 items-center gap-3">
-                        <div
-                            :class="
-                                cn(
-                                    'flex h-4 w-4 items-center justify-center rounded-sm border border-primary transition-colors',
-                                    isUserSelected(status.id) ? 'bg-primary text-primary-foreground' : 'opacity-50 [&_svg]:invisible',
-                                )
-                            "
+        <!-- dropdown content -->
+        <PopoverContent class="min-w-80 p-0" align="start">
+            <Command :disabled="disabled">
+                <CommandInput v-model="searchQuery" placeholder="Search Status..." />
+                <CommandList>
+                    <CommandEmpty>No results found.</CommandEmpty>
+                    <CommandGroup>
+                        <!-- status items with checkboxes -->
+                        <CommandItem
+                            v-for="status in filteredStatuses"
+                            :key="status.id"
+                            :value="status.id.toString()"
+                            :disabled="disabled"
+                            @select.prevent="toggleStatus(status.id)"
                         >
-                            <CheckIcon class="h-3 w-3" />
-                        </div>
-                        <span>{{ status.name }}</span>
-                    </div>
-                </ComboboxItem>
-            </ComboboxGroup>
-        </ComboboxList>
-    </Combobox>
+                            <div class="flex flex-1 items-center gap-3">
+                                <!-- custom checkbox design -->
+                                <div
+                                    :class="
+                                        cn(
+                                            'flex h-4 w-4 items-center justify-center rounded-md border border-primary transition-colors',
+                                            isStatusSelected(status.id) ? 'bg-primary text-primary-foreground' : 'opacity-50 [&_svg]:invisible',
+                                        )
+                                    "
+                                >
+                                    <CheckIcon class="h-3 w-3" />
+                                </div>
+                                <!-- status icon if available -->
+                                <component v-if="getStatusIcon(status.name)" :is="getStatusIcon(status.name)" class="h-4 w-4 text-muted-foreground" />
+                                <span>{{ status.name }}</span>
+                            </div>
+                        </CommandItem>
+                    </CommandGroup>
+                </CommandList>
+            </Command>
+        </PopoverContent>
+    </Popover>
 </template>
