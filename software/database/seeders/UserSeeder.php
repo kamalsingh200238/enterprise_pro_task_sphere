@@ -29,7 +29,7 @@ class UserSeeder extends Seeder
         // Create supervisors
         $supervisors = [
             'Oshan Jain',
-            'Md. Fahim',
+            'Md Fahim',
             'Daniel Amadike',
             'Maham Mahmood',
             'Sabrina Mei',
