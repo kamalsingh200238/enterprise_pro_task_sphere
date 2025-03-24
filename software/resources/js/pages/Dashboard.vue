@@ -346,15 +346,15 @@ const readableDate = (isoDate: string) => {
                 <div class="relative max-h-[40rem] overflow-auto rounded-md">
                     <table class="w-full border-separate border-spacing-0 whitespace-nowrap text-sm">
                         <thead>
-                            <tr class="bg-muted">
-                                <th class="sticky left-0 top-0 z-30 border-b border-r px-4 py-3 text-left font-bold text-muted-foreground">
+                            <tr>
+                                <th class="sticky left-0 top-0 z-30 border-b border-r bg-muted px-4 py-3 text-left font-bold text-muted-foreground">
                                     Task
                                 </th>
-                                <th class="sticky top-0 z-20 border-b px-4 py-3 text-left font-bold text-muted-foreground">Slug</th>
-                                <th class="sticky top-0 z-20 border-b px-4 py-3 text-left font-bold text-muted-foreground">Priority</th>
-                                <th class="sticky top-0 z-20 border-b px-4 py-3 text-left font-bold text-muted-foreground">Status</th>
-                                <th class="sticky top-0 z-20 border-b px-4 py-3 text-left font-bold text-muted-foreground">Due Date</th>
-                                <th class="sticky top-0 z-20 border-b px-4 py-3 text-left font-bold text-muted-foreground">
+                                <th class="sticky top-0 z-20 border-b bg-muted px-4 py-3 text-left font-bold text-muted-foreground">Slug</th>
+                                <th class="sticky top-0 z-20 border-b bg-muted px-4 py-3 text-left font-bold text-muted-foreground">Priority</th>
+                                <th class="sticky top-0 z-20 border-b bg-muted px-4 py-3 text-left font-bold text-muted-foreground">Status</th>
+                                <th class="sticky top-0 z-20 border-b bg-muted px-4 py-3 text-left font-bold text-muted-foreground">Due Date</th>
+                                <th class="sticky top-0 z-20 border-b bg-muted px-4 py-3 text-left font-bold text-muted-foreground">
                                     Last Updated At
                                 </th>
                             </tr>
