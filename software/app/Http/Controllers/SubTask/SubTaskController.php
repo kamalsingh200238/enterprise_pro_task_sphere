@@ -7,6 +7,8 @@ use App\Enums\FlashMessageVariant;
 use App\Helpers\FlashMessage;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\SubTask\StoreSubTaskRequest;
+use App\Mail\SubTaskAssigned;
+use App\Mail\SubTaskViewerAssigned;
 use App\Models\Comment;
 use App\Models\Priority;
 use App\Models\Status;
@@ -17,6 +19,7 @@ use DB;
 use Gate;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Mail;
 
 class SubTaskController extends Controller
 {
@@ -91,6 +94,32 @@ class SubTaskController extends Controller
             return $subTask;
         });
 
+        // send emails to all assignees
+        $subTask->load([
+            'assignees' => function ($query) {
+                $query->select('users.id', 'users.email', 'users.name');
+            },
+        ]);
+        foreach ($subTask->assignees as $assignee) {
+            if ($assignee->email) {
+                Mail::to($assignee->email)->queue(new SubTaskAssigned($subTask, $assignee));
+            }
+        }
+
+        // if there are viewers then send the viewer email
+        if (isset($validated['viewers']) && !empty($validated['viewers'])) {
+            $subTask->load([
+                'viewers' => function ($query) {
+                    $query->select('users.id', 'users.email', 'users.name');
+                },
+            ]);
+            foreach ($subTask->viewers as $viewer) {
+                if ($viewer->email) {
+                    Mail::to($viewer->email)->queue(new SubTaskViewerAssigned($subTask, $viewer));
+                }
+            }
+        }
+
         // return to show all page with a success flash message
         return to_route('sub-tasks.show-all')
             ->with('flash', new FlashMessage(
@@ -147,8 +176,11 @@ class SubTaskController extends Controller
         // Get validated data
         $validated = $request->validated();
 
+        $newAssignees = [];
+        $newViewers = [];
+
         // use db transaction
-        $updatedSubTask = DB::transaction(function () use ($validated, $subTask) {
+        $updatedSubTask = DB::transaction(function () use ($validated, $subTask, &$newAssignees, &$newViewers) {
             // Update the task with validated data
             $subTask->update([
                 ...$validated,
@@ -157,16 +189,38 @@ class SubTaskController extends Controller
 
             // Update assignees if they exist in the request
             if (isset($validated['assignees'])) {
-                $subTask->assignees()->sync($validated['assignees']);
+                $assigneeChanges = $subTask->assignees()->sync($validated['assignees']);
+                $newAssignees = $assigneeChanges['attached'];
             }
 
             // Update viewers if they exist in the request
             if (isset($validated['viewers'])) {
-                $subTask->viewers()->sync($validated['viewers']);
+                $viewerChanges = $subTask->viewers()->sync($validated['viewers']);
+                $newViewers = $viewerChanges['attached'];
             }
 
             return $subTask;
         });
+
+        if (!empty($newAssignees)) {
+            $users = User::whereIn('id', $newAssignees)->get();
+            // send emails to all assignees
+            foreach ($users as $user) {
+                if ($user->email) {
+                    Mail::to($user->email)->queue(new SubTaskAssigned($subTask, $user));
+                }
+            }
+        }
+
+        if (!empty($newViewers)) {
+            $users = User::whereIn('id', $newViewers)->get();
+            // send emails to all assignees
+            foreach ($users as $user) {
+                if ($user->email) {
+                    Mail::to($user->email)->queue(new SubTaskAssigned($subTask, $user));
+                }
+            }
+        }
 
         // redirect to show page with flash message
         return to_route('sub-tasks.show', $updatedSubTask->id)
