@@ -7,6 +7,8 @@ use App\Enums\FlashMessageVariant;
 use App\Helpers\FlashMessage;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Task\StoreTaskRequest;
+use App\Mail\TaskAssigned;
+use App\Mail\TaskViewerAssigned;
 use App\Models\Comment;
 use App\Models\Priority;
 use App\Models\Project;
@@ -17,6 +19,7 @@ use DB;
 use Gate;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Mail;
 
 class TaskController extends Controller
 {
@@ -74,7 +77,7 @@ class TaskController extends Controller
             );
 
             // add slug in the task
-            $task->slug = 'TASK-'.$task->id;
+            $task->slug = 'TASK-' . $task->id;
             $task->saveQuietly();
 
             // attach assignees if they exist
@@ -91,6 +94,31 @@ class TaskController extends Controller
             return $task;
         });
 
+        // send emails to all assignees
+        $task->load([
+            'assignees' => function ($query) {
+                $query->select('users.id', 'users.email', 'users.name');
+            },
+        ]);
+        foreach ($task->assignees as $assignee) {
+            if ($assignee->email) {
+                Mail::to($assignee->email)->queue(new TaskAssigned($task, $assignee));
+            }
+        }
+
+        // if there are viewers then send the viewer email
+        if (isset($validated['viewers']) && !empty($validated['viewers'])) {
+            $task->load([
+                'viewers' => function ($query) {
+                    $query->select('users.id', 'users.email', 'users.name');
+                },
+            ]);
+            foreach ($task->viewers as $viewer) {
+                if ($viewer->email) {
+                    Mail::to($viewer->email)->queue(new TaskViewerAssigned($task, $viewer));
+                }
+            }
+        }
         // return to show all page with a success flash message
         return to_route('tasks.show-all')
             ->with('flash', new FlashMessage(
@@ -147,8 +175,11 @@ class TaskController extends Controller
         // Get validated data
         $validated = $request->validated();
 
+        $newAssignees = [];
+        $newViewers = [];
+
         // use db transaction
-        $updatedTask = DB::transaction(function () use ($validated, $task) {
+        $updatedTask = DB::transaction(function () use ($validated, $task, &$newAssignees, &$newViewers) {
             // Update the task with validated data
             $task->update([
                 ...$validated,
@@ -157,16 +188,38 @@ class TaskController extends Controller
 
             // Update assignees if they exist in the request
             if (isset($validated['assignees'])) {
-                $task->assignees()->sync($validated['assignees']);
+                $assigneeChanges = $task->assignees()->sync($validated['assignees']);
+                $newAssignees = $assigneeChanges['attached'];
             }
 
             // Update viewers if they exist in the request
             if (isset($validated['viewers'])) {
-                $task->viewers()->sync($validated['viewers']);
+                $viewerChanges = $task->viewers()->sync($validated['viewers']);
+                $newViewers = $viewerChanges['attached'];
             }
 
             return $task;
         });
+
+        if (!empty($newAssignees)) {
+            $users = User::whereIn('id', $newAssignees)->get();
+            // send emails to all assignees
+            foreach ($users as $user) {
+                if ($user->email) {
+                    Mail::to($user->email)->queue(new TaskAssigned($task, $user));
+                }
+            }
+        }
+
+        if (!empty($newViewers)) {
+            $users = User::whereIn('id', $newViewers)->get();
+            // send emails to all assignees
+            foreach ($users as $user) {
+                if ($user->email) {
+                    Mail::to($user->email)->queue(new TaskViewerAssigned($task, $user));
+                }
+            }
+        }
 
         // redirect to show page with flash message
         return to_route('tasks.show', $updatedTask->id)
