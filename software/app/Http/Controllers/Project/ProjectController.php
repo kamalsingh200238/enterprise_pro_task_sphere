@@ -7,6 +7,8 @@ use App\Enums\FlashMessageVariant;
 use App\Helpers\FlashMessage;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Project\StoreProjectRequest;
+use App\Mail\ProjectAssigned;
+use App\Mail\ProjectViewerAssigned;
 use App\Models\Comment;
 use App\Models\Priority;
 use App\Models\Project;
@@ -16,6 +18,7 @@ use DB;
 use Gate;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Mail;
 
 class ProjectController extends Controller
 {
@@ -72,7 +75,7 @@ class ProjectController extends Controller
             );
 
             // add slug in the project
-            $project->slug = 'PRO-'.$project->id;
+            $project->slug = 'PRO-' . $project->id;
             $project->saveQuietly();
 
             // attach assignees if they exist
@@ -88,6 +91,32 @@ class ProjectController extends Controller
             // return project
             return $project;
         });
+
+        // send emails to all assignees
+        $project->load([
+            'assignees' => function ($query) {
+                $query->select('users.id', 'users.email', 'users.name');
+            },
+        ]);
+        foreach ($project->assignees as $assignee) {
+            if ($assignee->email) {
+                Mail::to($assignee->email)->queue(new ProjectAssigned($project, $assignee));
+            }
+        }
+
+        // if there are viewers then send the viewer email
+        if (isset($validated['viewers']) && !empty($validated['viewers'])) {
+            $project->load([
+                'viewers' => function ($query) {
+                    $query->select('users.id', 'users.email', 'users.name');
+                },
+            ]);
+            foreach ($project->viewers as $viewer) {
+                if ($viewer->email) {
+                    Mail::to($viewer->email)->queue(new ProjectViewerAssigned($project, $viewer));
+                }
+            }
+        }
 
         // return to show all page with a success flash message
         return to_route('projects.show-all')
@@ -143,8 +172,11 @@ class ProjectController extends Controller
         // Get validated data
         $validated = $request->validated();
 
+        $newAssignees = [];
+        $newViewers = [];
+
         // use db transaction
-        $updatedProject = DB::transaction(function () use ($validated, $project) {
+        $updatedProject = DB::transaction(function () use ($validated, $project, &$newAssignees, &$newViewers) {
             // Update the project with validated data
             $project->update([
                 ...$validated,
@@ -153,16 +185,38 @@ class ProjectController extends Controller
 
             // Update assignees if they exist in the request
             if (isset($validated['assignees'])) {
-                $project->assignees()->sync($validated['assignees']);
+                $assigneeChanges = $project->assignees()->sync($validated['assignees']);
+                $newAssignees = $assigneeChanges['attached'];
             }
 
             // Update viewers if they exist in the request
             if (isset($validated['viewers'])) {
-                $project->viewers()->sync($validated['viewers']);
+                $viewerChanges = $project->viewers()->sync($validated['viewers']);
+                $newViewers = $viewerChanges['attached'];
             }
 
             return $project;
         });
+
+        if (!empty($newAssignees)) {
+            $users = User::whereIn('id', $newAssignees)->get();
+            // send emails to all assignees
+            foreach ($users as $user) {
+                if ($user->email) {
+                    Mail::to($user->email)->queue(new ProjectAssigned($project, $user));
+                }
+            }
+        }
+
+        if (!empty($newViewers)) {
+            $users = User::whereIn('id', $newViewers)->get();
+            // send emails to all assignees
+            foreach ($users as $user) {
+                if ($user->email) {
+                    Mail::to($user->email)->queue(new ProjectAssigned($project, $user));
+                }
+            }
+        }
 
         // redirect to show page with flash message
         return to_route('projects.show', $updatedProject->id)
