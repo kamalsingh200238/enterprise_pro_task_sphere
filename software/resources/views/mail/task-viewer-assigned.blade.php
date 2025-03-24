@@ -10,7 +10,7 @@ Task name: **{{ $task->name }} ({{ $task->slug }})**
 
 Please click the button below to view the task details.
 
-<x-mail::button :url="url('/task/' . $task->id)">
+<x-mail::button :url="url('/tasks/' . $task->id)">
     View Task
 </x-mail::button>
 
