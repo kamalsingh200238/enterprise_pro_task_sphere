@@ -10,7 +10,7 @@ Sub-Task name: **{{ $subTask->name }} ({{ $subTask->slug }})**
 
 Please click the button below to view the sub-task details.
 
-<x-mail::button :url="url('/sub-tasks/' . $task->id)">
+<x-mail::button :url="url('/sub-tasks/' . $subTask->id)">
     View Sub-Task
 </x-mail::button>
 
