@@ -363,7 +363,7 @@ const readableDate = (isoDate: string) => {
                             <!-- task rows -->
                             <tr v-for="task in tasks.data" :key="task.slug" class="group transition-colors hover:bg-muted/50">
                                 <td
-                                    class="sticky left-0 z-10 max-w-md whitespace-normal border-b border-r bg-background p-0 transition-colors group-hover:bg-muted group-hover:text-blue-500"
+                                    class="sticky left-0 z-10 min-w-96 max-w-md whitespace-normal border-b border-r bg-background p-0 transition-colors group-hover:bg-muted group-hover:text-blue-500"
                                 >
                                     <Link
                                         :href="getTaskLink(task.slug, task.id)"
