@@ -15,7 +15,9 @@ class ProjectViewerAssigned extends Mailable
     use Queueable, SerializesModels;
 
     public Project $project;
+
     public User $user;
+
     /**
      * Create a new message instance.
      */
