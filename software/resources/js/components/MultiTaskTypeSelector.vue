@@ -81,7 +81,9 @@ const toggleType = (value: string) => {
                                     :class="
                                         cn(
                                             'flex h-4 w-4 items-center justify-center rounded-md border border-primary transition-colors',
-                                            selectedTaskTypes.includes(taskType.value) ? 'bg-primary text-primary-foreground' : 'opacity-50 [&_svg]:invisible',
+                                            selectedTaskTypes.includes(taskType.value)
+                                                ? 'bg-primary text-primary-foreground'
+                                                : 'opacity-50 [&_svg]:invisible',
                                         )
                                     "
                                 >
