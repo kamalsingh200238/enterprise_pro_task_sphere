@@ -2,13 +2,19 @@
 
 namespace App\Models;
 
+use App\Jobs\LogAssigneeViewerChanges;
+use Fico7489\Laravel\Pivot\Traits\PivotEventTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class SubTask extends Model
 {
+    use LogsActivity, PivotEventTrait;
+
     /**
      * The attributes that are mass assignable.
      *
@@ -40,6 +46,42 @@ class SubTask extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['name', 'description', 'start_date', 'due_date', 'is_private', 'status.name', 'priority.name', 'supervisor.name', 'supervisor.email', 'parent.slug', 'parent.name'])
+            ->logOnlyDirty();
+    }
+
+    public static function boot()
+    {
+        parent::boot();
+
+        static::pivotAttached(function ($model, $relationName, $pivotIds) {
+            $user = auth()->user();
+            $eventType = $relationName === 'assignees' ? 'assignee added' : 'viewer added';
+            LogAssigneeViewerChanges::dispatch(
+                $user,
+                $model,
+                $relationName,
+                $pivotIds,
+                $eventType
+            );
+        });
+
+        static::pivotDetached(function ($model, $relationName, $pivotIds) {
+            $user = auth()->user();
+            $eventType = $relationName === 'assignees' ? 'assignee removed' : 'viewer removed';
+            LogAssigneeViewerChanges::dispatch(
+                $user,
+                $model,
+                $relationName,
+                $pivotIds,
+                $eventType
+            );
+        });
+    }
 
     /**
      * Get the task which is parent to sub-task
