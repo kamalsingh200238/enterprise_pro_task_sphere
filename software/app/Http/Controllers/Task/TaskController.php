@@ -77,7 +77,7 @@ class TaskController extends Controller
             );
 
             // add slug in the task
-            $task->slug = 'TASK-' . $task->id;
+            $task->slug = 'TASK-'.$task->id;
             $task->saveQuietly();
 
             // attach assignees if they exist
@@ -107,7 +107,7 @@ class TaskController extends Controller
         }
 
         // if there are viewers then send the viewer email
-        if (isset($validated['viewers']) && !empty($validated['viewers'])) {
+        if (isset($validated['viewers']) && ! empty($validated['viewers'])) {
             $task->load([
                 'viewers' => function ($query) {
                     $query->select('users.id', 'users.email', 'users.name');
@@ -119,6 +119,7 @@ class TaskController extends Controller
                 }
             }
         }
+
         // return to show all page with a success flash message
         return to_route('tasks.show-all')
             ->with('flash', new FlashMessage(
@@ -201,7 +202,7 @@ class TaskController extends Controller
             return $task;
         });
 
-        if (!empty($newAssignees)) {
+        if (! empty($newAssignees)) {
             $users = User::whereIn('id', $newAssignees)->get();
             // send emails to all assignees
             foreach ($users as $user) {
@@ -211,7 +212,7 @@ class TaskController extends Controller
             }
         }
 
-        if (!empty($newViewers)) {
+        if (! empty($newViewers)) {
             $users = User::whereIn('id', $newViewers)->get();
             // send emails to all assignees
             foreach ($users as $user) {
