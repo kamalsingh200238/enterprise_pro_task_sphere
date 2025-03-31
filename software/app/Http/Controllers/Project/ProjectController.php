@@ -75,7 +75,7 @@ class ProjectController extends Controller
             );
 
             // add slug in the project
-            $project->slug = 'PRO-' . $project->id;
+            $project->slug = 'PRO-'.$project->id;
             $project->saveQuietly();
 
             // attach assignees if they exist
@@ -105,7 +105,7 @@ class ProjectController extends Controller
         }
 
         // if there are viewers then send the viewer email
-        if (isset($validated['viewers']) && !empty($validated['viewers'])) {
+        if (isset($validated['viewers']) && ! empty($validated['viewers'])) {
             $project->load([
                 'viewers' => function ($query) {
                     $query->select('users.id', 'users.email', 'users.name');
@@ -198,7 +198,7 @@ class ProjectController extends Controller
             return $project;
         });
 
-        if (!empty($newAssignees)) {
+        if (! empty($newAssignees)) {
             $users = User::whereIn('id', $newAssignees)->get();
             // send emails to all assignees
             foreach ($users as $user) {
@@ -208,7 +208,7 @@ class ProjectController extends Controller
             }
         }
 
-        if (!empty($newViewers)) {
+        if (! empty($newViewers)) {
             $users = User::whereIn('id', $newViewers)->get();
             // send emails to all assignees
             foreach ($users as $user) {

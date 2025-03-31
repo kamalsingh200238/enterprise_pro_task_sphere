@@ -107,7 +107,7 @@ class SubTaskController extends Controller
         }
 
         // if there are viewers then send the viewer email
-        if (isset($validated['viewers']) && !empty($validated['viewers'])) {
+        if (isset($validated['viewers']) && ! empty($validated['viewers'])) {
             $subTask->load([
                 'viewers' => function ($query) {
                     $query->select('users.id', 'users.email', 'users.name');
@@ -202,7 +202,7 @@ class SubTaskController extends Controller
             return $subTask;
         });
 
-        if (!empty($newAssignees)) {
+        if (! empty($newAssignees)) {
             $users = User::whereIn('id', $newAssignees)->get();
             // send emails to all assignees
             foreach ($users as $user) {
@@ -212,7 +212,7 @@ class SubTaskController extends Controller
             }
         }
 
-        if (!empty($newViewers)) {
+        if (! empty($newViewers)) {
             $users = User::whereIn('id', $newViewers)->get();
             // send emails to all assignees
             foreach ($users as $user) {

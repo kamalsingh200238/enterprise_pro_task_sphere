@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Comment\CommentController;
 use App\Http\Controllers\Dashboard\DashboardController;
+use App\Http\Controllers\Logs\LogsController;
 use App\Http\Controllers\Project\ProjectController;
 use App\Http\Controllers\SubTask\SubTaskController;
 use App\Http\Controllers\Task\TaskController;
@@ -52,6 +53,9 @@ Route::middleware('auth')->group(function () {
     Route::put('/sub-tasks/{subTask}', [SubTaskController::class, 'edit'])->name('sub-tasks.edit');
     Route::delete('/sub-tasks/{subTask}', [SubTaskController::class, 'delete'])->name('sub-tasks.delete');
     Route::post('/sub-tasks/{subTask}/comment', [SubTaskController::class, 'createComment'])->name('sub-tasks.add-comment');
+
+    Route::get('logs', [LogsController::class, 'index'])->name('logs.show-all');
+    Route::get('logs/export', [LogsController::class, 'exportLogs'])->name('logs.export');
 });
 
 require __DIR__.'/settings.php';
