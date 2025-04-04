@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import AppLogoIcon from '@/components/AppLogoIcon.vue';
 import { Button } from '@/components/ui/button';
 import { useAppearance } from '@/composables/useAppearance';
 import { getSystemTheme } from '@/lib/getSystemTheme';
@@ -7,76 +8,112 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 
+// appearance system handles theme switching (light/dark/system) for the application
 const { appearance } = useAppearance();
 
-const canvasBG = computed(() => {
+const possibleCanasColors = Object.freeze({
+    light: 'hsl(0, 0%, 100%)',
+    dark: 'hsl(222.2, 84%, 4.9%)',
+});
+
+const possibleSphereColors = Object.freeze({
+    light: 'hsl(221.2, 83.2%, 53.3%)',
+    dark: 'hsl(217.2, 91.2%, 59.8%)',
+});
+
+// pick the right canvas background color based on current theme
+const currentCanvasBG = computed(() => {
     switch (appearance.value) {
         case 'light':
-            return '#fff';
+            return possibleCanasColors.light;
         case 'dark':
-            return '#000';
+            return possibleCanasColors.dark;
         default:
             const theme = getSystemTheme();
-            const color = theme === 'light' ? '#fff' : '#000';
+            const color = theme === 'light' ? possibleCanasColors.light : possibleCanasColors.dark;
             return color;
     }
 });
 
-// create a ref for the canvas container
+// pick the right sphere color based on current theme
+const currentSphereColor = computed(() => {
+    switch (appearance.value) {
+        case 'light':
+            return possibleSphereColors.light;
+        case 'dark':
+            return possibleSphereColors.dark;
+        default:
+            const theme = getSystemTheme();
+            return theme === 'light' ? possibleSphereColors.light : possibleSphereColors.dark;
+    }
+});
+
+// reference to the canvas element where three.js will render the scene
 const canvas = ref<HTMLCanvasElement | null>(null);
 
-// common variables for the scene
+// three.js core variables
 let scene: THREE.Scene;
 let camera: THREE.PerspectiveCamera;
 let renderer: THREE.WebGLRenderer;
 let controls: OrbitControls;
 let sphere: THREE.Mesh;
 
-watch(canvasBG, (newValue) => {
-    renderer.setClearColor(newValue, 1);
+// update background color when theme changes
+watch(currentCanvasBG, (newValue) => {
+    if (renderer) {
+        renderer.setClearColor(newValue, 1);
+    }
 });
 
+// update sphere color when theme changes
+watch(currentSphereColor, (newValue) => {
+    if (sphere && sphere.material) {
+        (sphere.material as THREE.MeshBasicMaterial).color.set(newValue);
+    }
+});
+
+// resize handler ensures the visualization remains properly scaled and centered
+// when the browser window changes size
 const onResize = () => {
     if (!camera || !renderer) return;
+    // update camera aspect ratio to match new dimensions
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
+    // orbit controls must be updated after camera changes to maintain proper behavior
     controls.update();
+    // resize the renderer to match window dimensions
     renderer.setSize(window.innerWidth, window.innerHeight);
 };
 
 onMounted(() => {
     if (!canvas.value) return;
 
-    // create the scene - this is the container for all 3d objects
+    // initialize the three.js environment
     scene = new THREE.Scene();
 
-    // create a camera with perspective projection
+    // set up the camera with perspective view (field of view, aspect ratio, clipping planes)
     camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
     camera.position.z = 5;
 
-    // create the renderer that will draw our 3d scene onto the canvas
+    // initialize the renderer with antialiasing for smoother edges
     renderer = new THREE.WebGLRenderer({ canvas: canvas.value, antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setClearColor(canvasBG.value, 1); // Set background color to light gray
+    renderer.setClearColor(currentCanvasBG.value, 1);
 
-    // add orbitcontrols to allow user interaction with the scene (rotate, pan, zoom)
+    // add orbit controls to enable user interaction with the sphere (rotate, zoom, pan)
     controls = new OrbitControls(camera, renderer.domElement);
     controls.update();
 
-    // create a sphere geometry to represent our "task sphere"
+    // create the task sphere using sphere geometry and wireframe material
     const geometry = new THREE.SphereGeometry(2.5, 32, 16);
-
-    // create a basic material with wireframe enabled to show the sphere's structure
-    const material = new THREE.MeshBasicMaterial({ color: '#ffba00', wireframe: true });
-
-    // combine the geometry and material to create a 3d mesh object
+    const material = new THREE.MeshBasicMaterial({ color: currentSphereColor.value, wireframe: true });
     sphere = new THREE.Mesh(geometry, material);
     scene.add(sphere);
 
-    // listen for window resize events
     window.addEventListener('resize', onResize);
 
-    // create an animation loop function that runs continuously
+    // animation loop handles continuous rotation of the sphere on multiple axes
+    // creating a dynamic, floating effect for the task sphere visualization
     const animate = () => {
         requestAnimationFrame(animate);
         sphere.rotation.x += 0.002;
@@ -87,6 +124,7 @@ onMounted(() => {
     animate();
 });
 
+// clean up three.js resources when component is unmounted to prevent memory leaks
 onUnmounted(() => {
     window.removeEventListener('resize', onResize);
     renderer.dispose();
@@ -94,13 +132,15 @@ onUnmounted(() => {
 </script>
 <template>
     <div class="min-h-screen w-full overflow-hidden">
-        <!-- header with navigation and login button -->
+        <!-- this header stays at the top of the page and shows the logo and login button -->
         <header class="fixed top-0 z-50 w-full border-b bg-background/50 backdrop-blur dark:bg-background/80">
-            <div class="mx-auto flex max-w-7xl items-center justify-between gap-5 px-4 py-3 md:px-10">
-                <div>
-                    <!-- TODO: Add logo -->
+            <div class="max-w-360 mx-auto flex items-center justify-between gap-5 px-4 py-3 md:px-10">
+                <!-- logo and app name -->
+                <div class="flex items-center justify-center gap-2">
+                    <AppLogoIcon class="h-4 w-4 fill-primary" />
                     <span class="text-lg font-bold">Task Sphere</span>
                 </div>
+                <!-- navigation links that change based on if user is logged in -->
                 <nav class="flex items-center">
                     <template v-if="$page.props.auth?.user">
                         <Button as-child>
@@ -116,13 +156,13 @@ onUnmounted(() => {
             </div>
         </header>
 
-        <!-- main content area with 3d sphere visualization -->
+        <!-- main area where the 3d sphere and welcome text is shown -->
         <main>
             <div class="flex min-h-screen w-full items-center justify-center">
-                <!-- canvas for three.js rendering -->
+                <!-- this canvas is where three.js draws the 3d sphere -->
                 <canvas ref="canvas" class="fixed inset-0 z-10"></canvas>
 
-                <!-- Centered content with backdrop blur -->
+                <!-- this box shows the welcome message on top of the 3d sphere with a blur effect -->
                 <div class="relative z-20 rounded-md bg-background/50 px-10 py-8 text-center backdrop-blur dark:bg-background/80">
                     <h1 class="text-2xl font-bold tracking-tight">Welcome to Task Sphere</h1>
                     <p class="mt-2 max-w-md text-muted-foreground">
