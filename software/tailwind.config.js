@@ -11,6 +11,9 @@ export default {
     ],
     theme: {
         extend: {
+            spacing: {
+                360: '90rem'
+            },
             fontFamily: {
                 sans: ['Instrument Sans', ...defaultTheme.fontFamily.sans],
             },
