@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Enums\UserRole;
 use App\Models\User;
 use Gate;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -22,6 +23,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Event::listen(function (\SocialiteProviders\Manager\SocialiteWasCalled $event) {
+            $event->extendSocialite('authentik', \SocialiteProviders\Authentik\Provider::class);
+        });
+
         // define gate for viewing logs
         Gate::define('view-logs', function (User $user) {
             return $user->hasRole([UserRole::Admin, UserRole::Supervisor]); // implement based on your user role system

@@ -17,6 +17,7 @@ class DatabaseSeeder extends Seeder
             [
                 PrioritySeeder::class,
                 StatusSeeder::class,
+                OAuthStatusSeeder::class,
                 UserSeeder::class,
             ]
         );

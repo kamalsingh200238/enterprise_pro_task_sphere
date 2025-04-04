@@ -82,7 +82,7 @@ class LogsController extends Controller
         return [
             'id' => $activityLog->id,
             'timestamp' => Carbon::parse($activityLog->created_at)->timezone('Europe/London')->format('d M, Y H:i:s'),
-            'causer' => ['name' => $activityLog->causer->name, 'email' => $activityLog->causer->email],
+            'causer' => ['name' => $activityLog->causer->name ?? 'system', 'email' => $activityLog->causer->email ?? 'system'],
             'event' => $this->getEventDetails($activityLog),
             'subject' => $this->getFormattedSubject($activityLog),
             'oldValues' => $this->renderOldValues($activityLog),

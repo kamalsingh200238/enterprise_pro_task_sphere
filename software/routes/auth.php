@@ -16,6 +16,10 @@ Route::middleware('guest')->group(function () {
 
     // Route::post('register', [RegisteredUserController::class, 'store']);
 
+    Route::get('/auth/redirect', [AuthenticatedSessionController::class, 'authentikRedirect'])->name('login.authentik');
+
+    Route::get('/auth/callback', [AuthenticatedSessionController::class, 'authentikCallback'])->name('login.authentik-callback');
+
     Route::get('login', [AuthenticatedSessionController::class, 'create'])
         ->name('login');
 

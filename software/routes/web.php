@@ -10,7 +10,6 @@ use App\Http\Controllers\User\UserController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-// TODO: ADD THIS ROUTES IN AUTH MIDDLEWARE
 Route::get('/', function () {
     return Inertia::render('Welcome');
 })->name('home');

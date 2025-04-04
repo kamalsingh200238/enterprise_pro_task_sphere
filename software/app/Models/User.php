@@ -28,6 +28,7 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
+        'uses_oauth',
     ];
 
     /**
@@ -50,6 +51,7 @@ class User extends Authenticatable
         return [
             'password' => 'hashed',
             'role' => UserRole::class,
+            'uses_oauth' => 'boolean',
         ];
     }
 

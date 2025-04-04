@@ -71,9 +71,9 @@ const submit = () => {
                     <InputError :message="form.errors.password" />
                 </div>
 
-                <div class="flex items-center justify-between" :tabindex="3">
+                <div class="flex items-center justify-between">
                     <Label for="remember" class="flex items-center space-x-3">
-                        <Checkbox id="remember" v-model:checked="form.remember" :tabindex="4" />
+                        <Checkbox id="remember" v-model="form.remember" :tabindex="3" />
                         <span>Remember me</span>
                     </Label>
                 </div>
@@ -82,12 +82,16 @@ const submit = () => {
                     <LoaderCircle v-if="form.processing" class="h-4 w-4 animate-spin" />
                     Log in
                 </Button>
+
+                <Button variant="secondary" as-child>
+                    <a :href="route('login.authentik')"> Login with Authentik</a>
+                </Button>
             </div>
 
-            <div class="text-center text-sm text-muted-foreground">
-                Don't have an account?
-                <!-- <TextLink :href="route('register')" :tabindex="5">Sign up</TextLink> -->
-            </div>
+            <!-- <div class="text-center text-sm text-muted-foreground"> -->
+            <!-- Don't have an account? -->
+            <!-- <TextLink :href="route('register')" :tabindex="5">Sign up</TextLink> -->
+            <!-- </div> -->
         </form>
     </AuthBase>
 </template>
