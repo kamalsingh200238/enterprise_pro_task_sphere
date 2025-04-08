@@ -103,7 +103,7 @@ const selectedUserData = computed(() => props.superisorsAndAdmins.find((user) =>
                                     <CheckIcon :class="cn('h-4 w-4')" />
                                 </div>
 
-                                <Avatar :class="isUserSelected(user.id) ? 'bg-primary/10' : 'bg-primary/5'">
+                                <Avatar>
                                     <AvatarFallback>
                                         {{ getInitials(user.name) }}
                                     </AvatarFallback>

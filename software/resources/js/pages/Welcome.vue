@@ -3,13 +3,15 @@ import AppLogoIcon from '@/components/AppLogoIcon.vue';
 import { Button } from '@/components/ui/button';
 import { useAppearance } from '@/composables/useAppearance';
 import { getSystemTheme } from '@/lib/getSystemTheme';
-import { Link } from '@inertiajs/vue3';
+import { SharedData } from '@/types';
+import { Link, usePage } from '@inertiajs/vue3';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 
 // appearance system handles theme switching (light/dark/system) for the application
 const { appearance } = useAppearance();
+const user = computed(() => usePage<SharedData>().props.auth.user);
 
 const possibleCanasColors = Object.freeze({
     light: 'hsl(0, 0%, 100%)',
@@ -134,15 +136,15 @@ onUnmounted(() => {
     <div class="min-h-screen w-full overflow-hidden">
         <!-- this header stays at the top of the page and shows the logo and login button -->
         <header class="fixed top-0 z-50 w-full border-b bg-background/50 backdrop-blur dark:bg-background/80">
-            <div class="max-w-360 mx-auto flex items-center justify-between gap-5 px-4 py-3 md:px-10">
+            <div class="mx-auto flex max-w-360 items-center justify-between gap-5 px-4 py-3 md:px-10">
                 <!-- logo and app name -->
                 <div class="flex items-center justify-center gap-2">
-                    <AppLogoIcon class="h-4 w-4 fill-primary" />
+                    <AppLogoIcon class="size-4 fill-primary" />
                     <span class="text-lg font-bold">Task Sphere</span>
                 </div>
                 <!-- navigation links that change based on if user is logged in -->
                 <nav class="flex items-center">
-                    <template v-if="$page.props.auth?.user">
+                    <template v-if="user">
                         <Button as-child>
                             <Link :href="route('dashboard')">Dashboard</Link>
                         </Button>

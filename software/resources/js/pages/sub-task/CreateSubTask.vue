@@ -16,6 +16,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { Priority, Status, Task, User } from '@/types';
 import { Head, useForm } from '@inertiajs/vue3';
 
+// props for the page
 interface Props {
     statuses: Status[];
     priorities: Priority[];
@@ -24,8 +25,10 @@ interface Props {
     tasks: Task[];
 }
 
+// props passed from the server-side (Inertia)
 const props = defineProps<Props>();
 
+// form data type definition
 type FormType = {
     task_id: number | null;
     name: string;
@@ -40,6 +43,7 @@ type FormType = {
     viewers: number[];
 };
 
+// initialize form state using useForm from Inertia
 const form = useForm<FormType>({
     task_id: null,
     name: '',
@@ -54,124 +58,162 @@ const form = useForm<FormType>({
     viewers: [],
 });
 
+// submit the form data
 const submit = () => {
-    // if sub-task is private remove all viewers
+    // if sub-task is not private, remove all viewers
     if (!form.is_private) {
         form.viewers = [];
     }
 
-    // submit form
+    // submit the form using inertia's post method
     form.post(route('sub-tasks.store'), {
         onSuccess: () => {
-            form.reset();
+            form.reset(); // reset the form on successful submission
         },
     });
 };
 </script>
 
 <template>
+    <!-- page title for browser tab -->
     <Head title="Create New Sub-task" />
+
+    <!-- app layout wrapper -->
     <AppLayout>
-        <main class="mx-auto min-w-[65rem] max-w-7xl p-4">
+        <div class="container mx-auto px-4 py-6">
+            <!-- header section with page title and submit button -->
+            <div class="mb-6 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+                <!-- page title -->
+                <h1 class="text-2xl font-bold">Create New Sub-task</h1>
+                <!-- submit button for sub-task creation -->
+                <Button type="submit" :disabled="form.processing" @click="submit"> Create Sub-task </Button>
+            </div>
+
+            <!-- form for creating a new sub-task -->
             <form @submit.prevent="submit">
-                <div class="grid gap-8 lg:grid-cols-3">
-                    <div class="col-span-2 space-y-6">
-                        <div>
-                            <Label for="name">Task Name </Label>
-                            <Input id="name" type="text" v-model="form.name" />
-                            <FormError :err="form.errors.name" />
-                        </div>
-                        <div>
-                            <Label for="description">Description</Label>
-                            <Textarea id="description" v-model="form.description" rows="20" />
-                            <FormError :err="form.errors.description" />
+                <div class="grid gap-6 lg:grid-cols-3">
+                    <!-- left section: sub-task details (name, description) -->
+                    <div class="col-span-full lg:col-span-2">
+                        <div class="w-full rounded-md border shadow-sm">
+                            <div class="space-y-6 p-6">
+                                <!-- sub-task name input field -->
+                                <div>
+                                    <Label for="name">Sub-task Name</Label>
+                                    <Input id="name" type="text" v-model="form.name" class="mt-1" />
+                                    <FormError :err="form.errors.name" />
+                                </div>
+
+                                <!-- sub-task description textarea -->
+                                <div>
+                                    <Label for="description">Description</Label>
+                                    <Textarea id="description" v-model="form.description" rows="15" class="mt-1" />
+                                    <FormError :err="form.errors.description" />
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div class="space-y-6">
-                        <div>
-                            <Label for="status">Status</Label>
-                            <StatusSelect
-                                id="status"
-                                v-model="form.status_id"
-                                :statuses="props.statuses"
-                                :disabled="false"
-                                :update-status-to-done="true"
-                            />
-                            <FormError :err="form.errors.status_id" />
-                        </div>
-                        <div>
-                            <Label for="priority">Priority</Label>
-                            <PrioritySelect id="priority" v-model="form.priority_id" :priorities="props.priorities" :disabled="false" />
-                            <FormError :err="form.errors.priority_id" />
-                        </div>
-                        <div>
-                            <div class="flex flex-col gap-1">
-                                <Label for="start-date">Start Date</Label>
-                                <DatePicker id="start-date" v-model="form.start_date" :disabled="false" />
+
+                    <!-- right section: sub-task settings and assignments -->
+                    <div class="col-span-full lg:col-span-1">
+                        <div class="w-full rounded-md border shadow-sm">
+                            <div class="space-y-4 p-6">
+                                <!-- status selection dropdown -->
+                                <div>
+                                    <Label for="status">Status</Label>
+                                    <StatusSelect
+                                        id="status"
+                                        v-model="form.status_id"
+                                        :statuses="props.statuses"
+                                        :disabled="false"
+                                        :update-status-to-done="true"
+                                    />
+                                    <FormError :err="form.errors.status_id" />
+                                </div>
+
+                                <!-- priority selection dropdown -->
+                                <div>
+                                    <Label for="priority">Priority</Label>
+                                    <PrioritySelect id="priority" v-model="form.priority_id" :priorities="props.priorities" :disabled="false" />
+                                    <FormError :err="form.errors.priority_id" />
+                                </div>
+
+                                <!-- start and due date selection -->
+                                <div class="space-y-4">
+                                    <!-- start date -->
+                                    <div class="flex flex-col">
+                                        <Label for="start-date" class="mb-1">Start Date</Label>
+                                        <DatePicker id="start-date" v-model="form.start_date" :disabled="false" />
+                                        <FormError :err="form.errors.start_date" />
+                                    </div>
+
+                                    <!-- due date -->
+                                    <div class="flex flex-col">
+                                        <Label for="due-date" class="mb-1">Due Date</Label>
+                                        <DatePicker id="due-date" v-model="form.due_date" :disabled="false" />
+                                        <FormError :err="form.errors.due_date" />
+                                    </div>
+                                </div>
+
+                                <!-- parent task selection dropdown -->
+                                <div class="flex flex-col">
+                                    <Label for="task-selector" class="mb-1">Select Parent Task</Label>
+                                    <TaskSelect id="task-selector" :disabled="false" :tasks="props.tasks" v-model="form.task_id" />
+                                    <FormError :err="form.errors.task_id" />
+                                </div>
+
+                                <!-- supervisor selection dropdown -->
+                                <div class="flex flex-col">
+                                    <Label for="supervisor-selector" class="mb-1">Select Supervisor</Label>
+                                    <SupervisorSelect
+                                        id="supervisor-selector"
+                                        :disabled="false"
+                                        :superisorsAndAdmins="props.supervisorsAndAdmins"
+                                        v-model="form.supervisor_id"
+                                    />
+                                    <FormError :err="form.errors.supervisor_id" />
+                                </div>
+
+                                <!-- assignees selection dropdown -->
+                                <div class="flex flex-col">
+                                    <Label for="assignees-selector" class="mb-1">Select Assignees</Label>
+                                    <AssigneeSelector id="assignees-selector" :users="props.users" v-model="form.assignees" :disabled="false" />
+                                    <FormError :err="form.errors.assignees" />
+                                </div>
+
+                                <!-- private sub-task checkbox -->
+                                <div class="flex items-center space-x-2 pt-2">
+                                    <Checkbox id="is-private" v-model="form.is_private" />
+                                    <label
+                                        for="is-private"
+                                        class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                    >
+                                        Private Sub-task
+                                    </label>
+                                </div>
+
+                                <!-- viewers selection (only shown if sub-task is private) -->
+                                <div v-if="form.is_private" class="flex flex-col pt-2">
+                                    <Label for="viewers-selector" class="mb-1">Viewers</Label>
+                                    <ViewerSelector
+                                        id="viewers-selector"
+                                        :users="props.users"
+                                        v-model="form.viewers"
+                                        :assignee-ids="form.assignees"
+                                        :supervisor-id="form.supervisor_id"
+                                        :disabled="false"
+                                    />
+                                    <FormError :err="form.errors.viewers" />
+                                </div>
                             </div>
-                            <FormError :err="form.errors.start_date" />
-                        </div>
-                        <div>
-                            <div class="flex flex-col gap-1">
-                                <Label for="due-date">Due Date</Label>
-                                <DatePicker id="due-date" v-model="form.due_date" :disabled="false" />
-                            </div>
-                            <FormError :err="form.errors.due_date" />
-                        </div>
-                        <div>
-                            <div class="flex flex-col gap-1">
-                                <Label for="task-selector"> Select Task </Label>
-                                <TaskSelect id="task-selector" :disabled="false" :tasks="tasks" v-model="form.task_id" />
-                            </div>
-                            <FormError :err="form.errors.task_id" />
-                        </div>
-                        <div>
-                            <div class="flex flex-col gap-1">
-                                <Label for="supervisor-selector"> Select Supervisor </Label>
-                                <SupervisorSelect
-                                    id="supervisor-selector"
-                                    :disabled="false"
-                                    :superisorsAndAdmins="props.supervisorsAndAdmins"
-                                    v-model="form.supervisor_id"
-                                />
-                            </div>
-                            <FormError :err="form.errors.supervisor_id" />
-                        </div>
-                        <div>
-                            <div class="flex flex-col gap-1">
-                                <Label for="assignees-selector"> Select Assignees </Label>
-                                <AssigneeSelector id="assignees-selector" :users="props.users" v-model="form.assignees" :disabled="false" />
-                            </div>
-                            <FormError :err="form.errors.assignees" />
-                        </div>
-                        <div class="flex items-center space-x-2">
-                            <Checkbox id="is-private" v-model="form.is_private" />
-                            <label
-                                for="is-private"
-                                class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                            >
-                                Private
-                            </label>
-                        </div>
-                        <!-- display viewers selector when sub-task is private -->
-                        <div v-if="form.is_private === true">
-                            <div class="flex flex-col gap-1">
-                                <Label for="viewers-selector"> Select Viewers </Label>
-                                <ViewerSelector
-                                    id="viewers-selector"
-                                    :users="users"
-                                    v-model="form.viewers"
-                                    :assignee-ids="form.assignees"
-                                    :supervisor-id="form.supervisor_id"
-                                    :disabled="false"
-                                />
-                            </div>
-                            <FormError :err="form.errors.viewers" />
                         </div>
                     </div>
                 </div>
-                <Button type="submit" :disabled="form.processing"> Create Sub-task </Button>
+
+                <!-- mobile submit button (visible on small screens) -->
+                <div class="mt-6 flex justify-center lg:hidden">
+                    <Button type="submit" :disabled="form.processing" class="max-w-xs"> Create Sub-task </Button>
+                </div>
             </form>
-        </main>
+        </div>
     </AppLayout>
 </template>

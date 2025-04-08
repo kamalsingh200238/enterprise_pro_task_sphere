@@ -2,7 +2,11 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Enums\FlashMessageType;
+use App\Enums\FlashMessageVariant;
+use App\Helpers\FlashMessage;
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
@@ -31,6 +35,17 @@ class PasswordResetLinkController extends Controller
         $request->validate([
             'email' => 'required|email',
         ]);
+
+        $user = User::where('email', $request->input('email'))->first();
+
+        if ($user && $user->uses_oauth) {
+            return redirect()->route('login')
+                ->with('flash', new FlashMessage(
+                    'You cannot reset your password, you are an OAuth user.',
+                    FlashMessageVariant::Error,
+                    FlashMessageType::Normal,
+                )->toArray());
+        }
 
         Password::sendResetLink(
             $request->only('email')

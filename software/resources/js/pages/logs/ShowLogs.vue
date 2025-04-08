@@ -31,30 +31,6 @@ import { format, parseISO } from 'date-fns';
 import { Bell } from 'lucide-vue-next';
 import { ref } from 'vue';
 
-// // Detailed interface for log properties
-// interface LogProperties {
-//     attributes?: Record<string, any>;
-//     old?: Record<string, any>;
-// }
-
-// Detailed interface for log entry matching Laravel spatie/laravel-activitylog format
-// interface ActivityLog {
-//     id: number;
-//     log_name: string;
-//     description: string;
-//     subject_type: string;
-//     subject_id: number;
-//     causer_type: string;
-//     causer_id: number;
-//     properties: LogProperties;
-//     created_at: string;
-//     updated_at: string;
-//     event: string;
-//     batch_uuid: string | null;
-//     causer: User;
-//     subject: Project;
-// }
-
 interface ReadableLogSubject {
     heading: string;
     description: string;

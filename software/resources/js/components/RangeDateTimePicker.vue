@@ -70,7 +70,7 @@ const dateRangeText = computed(() => {
                 </Button>
             </PopoverTrigger>
             <PopoverContent class="w-auto p-0" align="start">
-                <Calendar v-model.range="dateRange" is-range is24hr mode="datetime" :columns="1" :time-accuracy='3' />
+                <Calendar v-model.range="dateRange" is-range is24hr mode="datetime" :columns="1" :time-accuracy="3" />
             </PopoverContent>
         </Popover>
     </div>

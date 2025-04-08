@@ -28,4 +28,31 @@ class StoreProjectRequest extends FormRequest
             'viewers.*' => ['exists:users,id'],
         ];
     }
+
+    public function messages(): array
+    {
+        return [
+            'name.required' => 'Project name is required.',
+            'description.required' => 'Project description is required.',
+
+            'start_date.required' => 'Start date is required.',
+            'due_date.required' => 'Due date is required.',
+            'due_date.after_or_equal' => 'Due date must be after or equal to the start date.',
+
+            'status_id.required' => 'Project status is required.',
+            'status_id.exists' => 'Selected status does not exist.',
+
+            'priority_id.required' => 'Priority is required.',
+            'priority_id.exists' => 'Selected priority does not exist.',
+
+            'supervisor_id.required' => 'Supervisor is required.',
+            'supervisor_id.exists' => 'Selected supervisor does not exist.',
+
+            'assignees.required' => 'Please assign at least one user.',
+            'assignees.*.exists' => 'One or more selected assignees are invalid.',
+
+            'viewers.prohibited_unless' => 'Viewers can only be set if the project is private.',
+            'viewers.*.exists' => 'One or more selected viewers are invalid.',
+        ];
+    }
 }

@@ -32,6 +32,7 @@ export interface User {
     email: string;
     avatar?: string;
     role: UserRole;
+    uses_oauth: boolean;
     created_at: string;
     updated_at: string;
 }
@@ -44,7 +45,7 @@ export interface FlashMessage {
     messageType: 'normal' | 'createdProject' | 'createdTask' | 'createdSubTask';
     heading: string;
     description: string;
-    variant: 'success' | 'danger' | 'info' | 'warning';
+    variant: 'success' | 'error' | 'info' | 'warning';
     duration: number;
     context: FlashMessageContext;
 }
@@ -74,6 +75,8 @@ export interface Project {
     updated_by: number;
     created_at: string;
     updated_at: string;
+    comments?: Comment[];
+    tasks?: Task[];
 }
 
 export interface Task {
@@ -97,11 +100,13 @@ export interface Task {
     updated_by: number;
     created_at: string;
     updated_at: string;
+    comments?: Comment[];
+    subtasks?: SubTask[];
 }
 
 export interface SubTask {
     task_id: number;
-    parent?: Project;
+    parent?: Task;
     id: number;
     slug: string;
     name: string;
@@ -120,6 +125,7 @@ export interface SubTask {
     updated_by: number;
     created_at: string;
     updated_at: string;
+    comments?: Comment[];
 }
 
 export interface Status {

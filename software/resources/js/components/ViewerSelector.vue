@@ -91,7 +91,7 @@ watch(
                     <template v-if="selectedViewers.length > 0">
                         <Separator orientation="vertical" class="h-4" />
                         <!-- display how many viewers are selected -->
-                        <Badge variant="secondary"> {{ selectedViewers.length }} selected </Badge>
+                        <Badge variant="secondary"> {{ selectedViewers.length }} </Badge>
                     </template>
                 </div>
             </Button>
@@ -124,7 +124,7 @@ watch(
                                     <CheckIcon :class="cn('h-4 w-4')" />
                                 </div>
 
-                                <Avatar :class="isUserSelected(user.id) ? 'bg-primary/10' : 'bg-primary/5'">
+                                <Avatar>
                                     <AvatarFallback>{{ getInitials(user.name) }}</AvatarFallback>
                                 </Avatar>
 

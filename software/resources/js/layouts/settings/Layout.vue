@@ -2,27 +2,31 @@
 import Heading from '@/components/Heading.vue';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { type NavItem } from '@/types';
+import { SharedData, type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/vue3';
+import { computed } from 'vue';
+
+const page = usePage<SharedData>();
+const user = computed(() => page.props.auth.user);
+const currentPath = page.props.ziggy?.location ? new URL(page.props.ziggy.location).pathname : '';
 
 const sidebarNavItems: NavItem[] = [
     {
         title: 'Profile',
         href: '/settings/profile',
+        isActive: true,
     },
     {
         title: 'Password',
         href: '/settings/password',
+        isActive: !user.value.uses_oauth,
     },
     {
         title: 'Appearance',
         href: '/settings/appearance',
+        isActive: true,
     },
 ];
-
-const page = usePage();
-
-const currentPath = page.props.ziggy?.location ? new URL(page.props.ziggy.location).pathname : '';
 </script>
 
 <template>
@@ -38,8 +42,9 @@ const currentPath = page.props.ziggy?.location ? new URL(page.props.ziggy.locati
                         variant="ghost"
                         :class="['w-full justify-start', { 'bg-muted': currentPath === item.href }]"
                         as-child
+                        :disabled="!item.isActive"
                     >
-                        <Link :href="item.href">
+                        <Link as="button" :href="item.href">
                             {{ item.title }}
                         </Link>
                     </Button>

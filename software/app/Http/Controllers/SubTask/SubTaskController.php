@@ -8,6 +8,7 @@ use App\Helpers\FlashMessage;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\SubTask\StoreSubTaskRequest;
 use App\Mail\SubTaskAssigned;
+use App\Mail\SubTaskInReview;
 use App\Mail\SubTaskViewerAssigned;
 use App\Models\Comment;
 use App\Models\Priority;
@@ -26,13 +27,22 @@ class SubTaskController extends Controller
     /**
      * Display all sub-tasks
      */
-    public function index()
+    public function index(Request $request)
     {
         // check if user can access this page, i.e. only admins and supervisors
         Gate::authorize('viewAll', SubTask::class);
 
+        $subtasks = SubTask::query()
+            ->when($request->input('search'), function ($query, $search) {
+                $query->where('name', 'like', "%{$search}%")
+                    ->orWhere('slug', 'like', "%{$search}%");
+            })
+            ->orderBy('updated_at', 'desc')
+            ->paginate(20);
+
         return Inertia::render('sub-task/ShowAllSubTasks', [
-            'subTasks' => SubTask::all(),
+            'subTasks' => $subtasks,
+            'search' => $request->input('search', ''),
         ]);
     }
 
@@ -139,13 +149,12 @@ class SubTaskController extends Controller
         $subTask = SubTask::with([
             'assignees:id',
             'viewers:id',
-            'parent',
+            'parent.parent',
+            'comments.user',
         ])->findOrFail($id);
 
         // check if user can view the sub-task
         Gate::authorize('view', arguments: $subTask);
-
-        $comments = $subTask->comments()->latest()->with('user', 'commentable')->get();
 
         // show the sub-task
         return Inertia::render('sub-task/ShowSubTask', [
@@ -160,7 +169,6 @@ class SubTaskController extends Controller
             'priorities' => Priority::all(),
             'users' => User::all(),
             'supervisorsAndAdmins' => User::getAllSupervisorsAndAdmins()->get(),
-            'comments' => $comments,
             'tasks' => Task::all(),
         ]);
     }
@@ -178,9 +186,11 @@ class SubTaskController extends Controller
 
         $newAssignees = [];
         $newViewers = [];
+        $changingToReview = null;
 
         // use db transaction
-        $updatedSubTask = DB::transaction(function () use ($validated, $subTask, &$newAssignees, &$newViewers) {
+        $updatedSubTask = DB::transaction(function () use ($validated, $subTask, &$changingToReview, &$newAssignees, &$newViewers) {
+            $changingToReview = $validated['status_id'] !== $subTask->status_id && $validated['status_id'] === Status::where('name', 'In Review')->first()->id;
             // Update the task with validated data
             $subTask->update([
                 ...$validated,
@@ -191,12 +201,14 @@ class SubTaskController extends Controller
             if (isset($validated['assignees'])) {
                 $assigneeChanges = $subTask->assignees()->sync($validated['assignees']);
                 $newAssignees = $assigneeChanges['attached'];
+                $subTask->touch();
             }
 
             // Update viewers if they exist in the request
             if (isset($validated['viewers'])) {
                 $viewerChanges = $subTask->viewers()->sync($validated['viewers']);
                 $newViewers = $viewerChanges['attached'];
+                $subTask->touch();
             }
 
             return $subTask;
@@ -220,6 +232,11 @@ class SubTaskController extends Controller
                     Mail::to($user->email)->queue(new SubTaskAssigned($subTask, $user));
                 }
             }
+        }
+
+        if ($changingToReview) {
+            $user = User::find($subTask->supervisor_id)->first();
+            Mail::to($user)->queue(new SubTaskInReview($subTask, $user));
         }
 
         // redirect to show page with flash message
@@ -246,6 +263,7 @@ class SubTaskController extends Controller
 
         // get the name of done status
         $doneStatusId = Status::where('name', 'Done')->first()->id;
+        $inReviewStatusId = Status::where('name', 'In Review')->first()->id;
 
         // Check if user is trying to set status to "done"
         if ($validated['status_id'] == $doneStatusId) {
@@ -257,6 +275,11 @@ class SubTaskController extends Controller
         $subTask->update([
             'status_id' => $validated['status_id'],
         ]);
+
+        if ($validated['status_id'] === $inReviewStatusId) {
+            $user = User::find($subTask->supervisor_id)->first();
+            Mail::to($user)->queue(new SubTaskInReview($subTask, $user));
+        }
 
         // redirect to show page with flash message
         return to_route('sub-tasks.show', $subTask->id)
@@ -307,15 +330,23 @@ class SubTaskController extends Controller
         Gate::authorize('createComment', $subTask);
 
         // validate the incoming request
-        $validated = $request->validate([
-            'content' => ['required', 'min:3'],
-        ]);
+        $validated = $request->validate(
+            [
+                'content' => ['required', 'min:3'],
+            ],
+            [
+                'content.required' => 'Please provide a comment. It cannot be empty.',
+                'content.min' => 'The comment must be at least 3 characters long.',
+            ]
+        );
 
         // create a comment
         $subTask->comments()->create([
             'content' => $validated['content'],
             'user_id' => auth()->id(),
         ]);
+
+        $subTask->touch();
 
         // redirect to show page
         return to_route('sub-tasks.show', $subTask->id);

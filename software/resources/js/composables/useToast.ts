@@ -18,7 +18,7 @@ export function useToast() {
                     });
                 });
                 break;
-            case 'danger':
+            case 'error':
                 nextTick(() => {
                     toast.error(flash.heading, {
                         description: flash.description,

@@ -29,4 +29,39 @@ class StoreSubTaskRequest extends FormRequest
             'viewers.*' => ['exists:users,id'],
         ];
     }
+
+    /**
+     * Get custom validation messages.
+     */
+    public function messages(): array
+    {
+        return [
+            'task_id.required' => 'Task is required.',
+            'task_id.exists' => 'Selected task does not exist.',
+
+            'name.required' => 'Sub-task name is required.',
+            'name.max' => 'Sub-task name may not be greater than 255 characters.',
+
+            'description.required' => 'Sub-task description is required.',
+
+            'start_date.required' => 'Start date is required.',
+            'due_date.required' => 'Due date is required.',
+            'due_date.after_or_equal' => 'Due date must be after or equal to the start date.',
+
+            'status_id.required' => 'Sub-task status is required.',
+            'status_id.exists' => 'Selected status does not exist.',
+
+            'priority_id.required' => 'Priority is required.',
+            'priority_id.exists' => 'Selected priority does not exist.',
+
+            'supervisor_id.required' => 'Supervisor is required.',
+            'supervisor_id.exists' => 'Selected supervisor does not exist.',
+
+            'assignees.required' => 'Please assign at least one user.',
+            'assignees.*.exists' => 'One or more selected assignees are invalid.',
+
+            'viewers.prohibited_unless' => 'Viewers can only be set if the sub-task is private.',
+            'viewers.*.exists' => 'One or more selected viewers are invalid.',
+        ];
+    }
 }

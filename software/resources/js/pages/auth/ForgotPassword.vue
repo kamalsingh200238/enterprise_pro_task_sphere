@@ -29,7 +29,7 @@ const submit = () => {
             {{ status }}
         </div>
 
-        <div class="space-y-6">
+        <div class="space-y-6 text-foreground">
             <form @submit.prevent="submit">
                 <div class="grid gap-2">
                     <Label for="email">Email address</Label>

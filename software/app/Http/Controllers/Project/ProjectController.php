@@ -4,10 +4,12 @@ namespace App\Http\Controllers\Project;
 
 use App\Enums\FlashMessageType;
 use App\Enums\FlashMessageVariant;
+use App\Enums\UserRole;
 use App\Helpers\FlashMessage;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Project\StoreProjectRequest;
 use App\Mail\ProjectAssigned;
+use App\Mail\ProjectInReview;
 use App\Mail\ProjectViewerAssigned;
 use App\Models\Comment;
 use App\Models\Priority;
@@ -25,13 +27,22 @@ class ProjectController extends Controller
     /**
      * Display all projects
      */
-    public function index()
+    public function index(Request $request)
     {
         // check if user can access this page, i.e. only admins and supervisors
         Gate::authorize('viewAll', Project::class);
 
+        $projects = Project::query()
+            ->when($request->input('search'), function ($query, $search) {
+                $query->where('name', 'like', "%{$search}%")
+                    ->orWhere('slug', 'like', "%{$search}%");
+            })
+            ->orderBy('updated_at', 'desc')
+            ->paginate(20);
+
         return Inertia::render('project/ShowAllProjects', [
-            'projects' => Project::all(),
+            'projects' => $projects,
+            'search' => $request->input('search', ''),
         ]);
     }
 
@@ -142,7 +153,44 @@ class ProjectController extends Controller
         // check if user can view the project
         Gate::authorize('view', arguments: $project);
 
-        $comments = $project->comments()->latest()->with('user', 'commentable')->get();
+        $user = auth()->user();
+        $isAdminOrSupervisor = $user->hasRole([UserRole::Admin, UserRole::Supervisor]);
+
+        // Load the project with its tasks, subtasks, and all related comments using eager loading with constraints
+        $project->load([
+            // Load project comments
+            'comments' => function ($query) {
+                $query->with('user')->latest();
+            },
+            // Load tasks with permission filters
+            'tasks' => function ($query) use ($user, $isAdminOrSupervisor) {
+                $query->when(! $isAdminOrSupervisor, function ($q) use ($user) {
+                    $q->where(function ($subQ) use ($user) {
+                        $subQ->where('is_private', false)
+                            ->orWhereHas('assignees', fn ($assigneeQ) => $assigneeQ->where('user_id', $user->id))
+                            ->orWhereHas('viewers', fn ($viewerQ) => $viewerQ->where('user_id', $user->id));
+                    });
+                });
+            },
+            // Load task comments
+            'tasks.comments' => function ($query) {
+                $query->with('user')->latest();
+            },
+            // Load subtasks with permission filters
+            'tasks.subtasks' => function ($query) use ($user, $isAdminOrSupervisor) {
+                $query->when(! $isAdminOrSupervisor, function ($q) use ($user) {
+                    $q->where(function ($subQ) use ($user) {
+                        $subQ->where('is_private', false)
+                            ->orWhereHas('assignees', fn ($assigneeQ) => $assigneeQ->where('user_id', $user->id))
+                            ->orWhereHas('viewers', fn ($viewerQ) => $viewerQ->where('user_id', $user->id));
+                    });
+                });
+            },
+            // Load subtask comments
+            'tasks.subtasks.comments' => function ($query) {
+                $query->with('user')->latest();
+            },
+        ]);
 
         // show the project
         return Inertia::render('project/ShowProject', [
@@ -150,6 +198,7 @@ class ProjectController extends Controller
                 'edit' => auth()->user()->can('edit', $project),
                 'updateStatus' => auth()->user()->can('updateStatus', $project),
                 'updateStatusToDone' => auth()->user()->can('updateStatusToDone', Project::class),
+                'comment' => auth()->user()->can('createComment', $project),
                 'deleteComment' => auth()->user()->can('delete', Comment::class),
             ],
             'project' => $project,
@@ -157,7 +206,6 @@ class ProjectController extends Controller
             'priorities' => Priority::all(),
             'users' => User::all(),
             'supervisorsAndAdmins' => User::getAllSupervisorsAndAdmins()->get(),
-            'comments' => $comments,
         ]);
     }
 
@@ -174,9 +222,12 @@ class ProjectController extends Controller
 
         $newAssignees = [];
         $newViewers = [];
+        $changingToReview = null;
 
         // use db transaction
-        $updatedProject = DB::transaction(function () use ($validated, $project, &$newAssignees, &$newViewers) {
+        $updatedProject = DB::transaction(function () use ($validated, $project, &$changingToReview, &$newAssignees, &$newViewers) {
+            $changingToReview = $validated['status_id'] !== $project->status_id && $validated['status_id'] === Status::where('name', 'In Review')->first()->id;
+
             // Update the project with validated data
             $project->update([
                 ...$validated,
@@ -187,12 +238,14 @@ class ProjectController extends Controller
             if (isset($validated['assignees'])) {
                 $assigneeChanges = $project->assignees()->sync($validated['assignees']);
                 $newAssignees = $assigneeChanges['attached'];
+                $project->touch();
             }
 
             // Update viewers if they exist in the request
             if (isset($validated['viewers'])) {
                 $viewerChanges = $project->viewers()->sync($validated['viewers']);
                 $newViewers = $viewerChanges['attached'];
+                $project->touch();
             }
 
             return $project;
@@ -216,6 +269,11 @@ class ProjectController extends Controller
                     Mail::to($user->email)->queue(new ProjectAssigned($project, $user));
                 }
             }
+        }
+
+        if ($changingToReview) {
+            $user = User::find($project->supervisor_id)->first();
+            Mail::to($user)->queue(new ProjectInReview($project, $user));
         }
 
         // redirect to show page with flash message
@@ -242,9 +300,10 @@ class ProjectController extends Controller
 
         // get the name of done status
         $doneStatusId = Status::where('name', 'Done')->first()->id;
+        $inReviewStatusId = Status::where('name', 'In Review')->first()->id;
 
         // Check if user is trying to set status to "done"
-        if ($validated['status_id'] == $doneStatusId) {
+        if ($validated['status_id'] === $doneStatusId) {
             // check if user can update status to done
             Gate::authorize('updateStatusToDone', $project);
         }
@@ -253,6 +312,11 @@ class ProjectController extends Controller
         $project->update([
             'status_id' => $validated['status_id'],
         ]);
+
+        if ($validated['status_id'] === $inReviewStatusId) {
+            $user = User::find($project->supervisor_id)->first();
+            Mail::to($user)->queue(new ProjectInReview($project, $user));
+        }
 
         // redirect to show page with flash message
         return to_route('projects.show', $project->id)
@@ -303,15 +367,23 @@ class ProjectController extends Controller
         Gate::authorize('createComment', $project);
 
         // validate the incoming request
-        $validated = $request->validate([
-            'content' => ['required', 'min:3'],
-        ]);
+        $validated = $request->validate(
+            [
+                'content' => ['required', 'min:3'],
+            ],
+            [
+                'content.required' => 'Please provide a comment. It cannot be empty.',
+                'content.min' => 'The comment must be at least 3 characters long.',
+            ]
+        );
 
         // create a comment
         $project->comments()->create([
             'content' => $validated['content'],
             'user_id' => auth()->id(),
         ]);
+
+        $project->touch();
 
         // redirect to show page
         return to_route('projects.show', $project);

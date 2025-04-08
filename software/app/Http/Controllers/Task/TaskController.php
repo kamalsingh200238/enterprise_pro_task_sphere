@@ -4,10 +4,12 @@ namespace App\Http\Controllers\Task;
 
 use App\Enums\FlashMessageType;
 use App\Enums\FlashMessageVariant;
+use App\Enums\UserRole;
 use App\Helpers\FlashMessage;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Task\StoreTaskRequest;
 use App\Mail\TaskAssigned;
+use App\Mail\TaskInReview;
 use App\Mail\TaskViewerAssigned;
 use App\Models\Comment;
 use App\Models\Priority;
@@ -26,13 +28,22 @@ class TaskController extends Controller
     /**
      * Display all tasks
      */
-    public function index()
+    public function index(Request $request)
     {
         // check if user can access this page, i.e. only admins and supervisors
         Gate::authorize('viewAll', Task::class);
 
+        $tasks = Task::query()
+            ->when($request->input('search'), function ($query, $search) {
+                $query->where('name', 'like', "%{$search}%")
+                    ->orWhere('slug', 'like', "%{$search}%");
+            })
+            ->orderBy('updated_at', 'desc')
+            ->paginate(20);
+
         return Inertia::render('task/ShowAllTasks', [
-            'tasks' => Task::all(),
+            'tasks' => $tasks,
+            'search' => $request->input('search', ''),
         ]);
     }
 
@@ -135,17 +146,35 @@ class TaskController extends Controller
      */
     public function show(int $id)
     {
+        $user = auth()->user();
+        $isAdminOrSupervisor = $user->hasRole([UserRole::Admin, UserRole::Supervisor]);
+
         // fetch task with assignees and viewers
         $task = Task::with([
             'assignees:id',
             'viewers:id',
             'parent',
+            'comments' => function ($query) {
+                $query->with('user')->latest();
+            },
+            // Load subtasks with permission filters
+            'subtasks' => function ($query) use ($user, $isAdminOrSupervisor) {
+                $query->when(! $isAdminOrSupervisor, function ($q) use ($user) {
+                    $q->where(function ($subQ) use ($user) {
+                        $subQ->where('is_private', false)
+                            ->orWhereHas('assignees', fn ($assigneeQ) => $assigneeQ->where('user_id', $user->id))
+                            ->orWhereHas('viewers', fn ($viewerQ) => $viewerQ->where('user_id', $user->id));
+                    });
+                });
+            },
+            // Load subtasks' comments
+            'subtasks.comments' => function ($query) {
+                $query->with('user')->latest();
+            },
         ])->findOrFail($id);
 
         // check if user can view the task
         Gate::authorize('view', arguments: $task);
-
-        $comments = $task->comments()->latest()->with('user', 'commentable')->get();
 
         // show the task
         return Inertia::render('task/ShowTask', [
@@ -153,6 +182,7 @@ class TaskController extends Controller
                 'edit' => auth()->user()->can('edit', $task),
                 'updateStatus' => auth()->user()->can('updateStatus', $task),
                 'updateStatusToDone' => auth()->user()->can('updateStatusToDone', Task::class),
+                'comment' => auth()->user()->can('createComment', $task),
                 'deleteComment' => auth()->user()->can('delete', Comment::class),
             ],
             'task' => $task,
@@ -160,7 +190,6 @@ class TaskController extends Controller
             'priorities' => Priority::all(),
             'users' => User::all(),
             'supervisorsAndAdmins' => User::getAllSupervisorsAndAdmins()->get(),
-            'comments' => $comments,
             'projects' => Project::all(),
         ]);
     }
@@ -178,9 +207,11 @@ class TaskController extends Controller
 
         $newAssignees = [];
         $newViewers = [];
+        $changingToReview = null;
 
         // use db transaction
-        $updatedTask = DB::transaction(function () use ($validated, $task, &$newAssignees, &$newViewers) {
+        $updatedTask = DB::transaction(function () use ($validated, $task, &$changingToReview, &$newAssignees, &$newViewers) {
+            $changingToReview = $validated['status_id'] !== $task->status_id && $validated['status_id'] === Status::where('name', 'In Review')->first()->id;
             // Update the task with validated data
             $task->update([
                 ...$validated,
@@ -191,12 +222,14 @@ class TaskController extends Controller
             if (isset($validated['assignees'])) {
                 $assigneeChanges = $task->assignees()->sync($validated['assignees']);
                 $newAssignees = $assigneeChanges['attached'];
+                $task->touch();
             }
 
             // Update viewers if they exist in the request
             if (isset($validated['viewers'])) {
                 $viewerChanges = $task->viewers()->sync($validated['viewers']);
                 $newViewers = $viewerChanges['attached'];
+                $task->touch();
             }
 
             return $task;
@@ -222,6 +255,11 @@ class TaskController extends Controller
             }
         }
 
+        if ($changingToReview) {
+            $user = User::find($task->supervisor_id)->first();
+            Mail::to($user)->queue(new TaskInReview($task, $user));
+        }
+
         // redirect to show page with flash message
         return to_route('tasks.show', $updatedTask->id)
             ->with('flash', new FlashMessage(
@@ -236,29 +274,29 @@ class TaskController extends Controller
      */
     public function updateStatus(Request $request, Task $task)
     {
-        // check if user can update status of task
         Gate::authorize('updateStatus', $task);
 
-        // Validate the incoming request data
         $validated = $request->validate([
             'status_id' => ['required', 'exists:statuses,id'],
         ]);
 
-        // get the name of done status
         $doneStatusId = Status::where('name', 'Done')->first()->id;
+        $inReviewStatusId = Status::where('name', 'In Review')->first()->id;
 
-        // Check if user is trying to set status to "done"
-        if ($validated['status_id'] == $doneStatusId) {
-            // check if user can update status to done
+        if ($validated['status_id'] === $doneStatusId) {
             Gate::authorize('updateStatusToDone', $task);
         }
 
-        // Update the task with the new status
+        // Update the task status
         $task->update([
             'status_id' => $validated['status_id'],
         ]);
 
-        // redirect to show page with flash message
+        if ($validated['status_id'] === $inReviewStatusId) {
+            $user = User::find($task->supervisor_id)->first();
+            Mail::to($user)->queue(new TaskInReview($task, $user));
+        }
+
         return to_route('tasks.show', $task->id)
             ->with('flash', new FlashMessage(
                 'Task Updated Successfully',
@@ -307,15 +345,23 @@ class TaskController extends Controller
         Gate::authorize('createComment', $task);
 
         // validate the incoming request
-        $validated = $request->validate([
-            'content' => ['required', 'min:3'],
-        ]);
+        $validated = $request->validate(
+            [
+                'content' => ['required', 'min:3'],
+            ],
+            [
+                'content.required' => 'Please provide a comment. It cannot be empty.',
+                'content.min' => 'The comment must be at least 3 characters long.',
+            ]
+        );
 
         // create a comment
         $task->comments()->create([
             'content' => $validated['content'],
             'user_id' => auth()->id(),
         ]);
+
+        $task->touch();
 
         // redirect to show page
         return to_route('tasks.show', $task->id);
