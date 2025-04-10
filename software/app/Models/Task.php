@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Jobs\LogAssigneeViewerChanges;
 use Fico7489\Laravel\Pivot\Traits\PivotEventTrait;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -14,7 +15,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
 
 class Task extends Model
 {
-    use LogsActivity, PivotEventTrait;
+    use HasFactory, LogsActivity, PivotEventTrait;
 
     /**
      * The attributes that are mass assignable.
