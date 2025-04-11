@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/pagination';
 import PaginationEllipsis from '@/components/ui/pagination/PaginationEllipsis.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { PaginatedData, User } from '@/types';
+import { BreadcrumbItem, PaginatedData, User } from '@/types';
 import { Link, router } from '@inertiajs/vue3';
 import { debounce } from 'lodash';
 import { ref, watch } from 'vue';
@@ -35,27 +35,40 @@ const updatePage = debounce((page: number) => {
 }, 50);
 
 watch(searchQuery, updateSearch);
+
+// breadcrumb for navigation
+const breadcrumbs: BreadcrumbItem[] = [
+    {
+        title: 'All Users',
+        href: '/users',
+    },
+];
 </script>
 
 <template>
-    <AppLayout>
+    <AppLayout :breadcrumbs="breadcrumbs">
         <div class="space-y-4 p-4">
             <!-- Search Input -->
             <Input v-model="searchQuery" placeholder="Search users..." class="w-full rounded-md border p-2" />
 
             <!-- User List -->
             <div class="space-y-4">
-                <div v-for="user in users.data" :key="user.id" class="flex items-center gap-4 rounded-md border p-4 shadow-sm">
+                <Link
+                    :href="route('users.show', user.id)"
+                    v-for="user in users.data"
+                    :key="user.id"
+                    class="group flex items-center gap-4 rounded-md border p-4 shadow-sm ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                >
                     <Avatar>
                         <AvatarFallback>{{ user.name.charAt(0) }}</AvatarFallback>
                     </Avatar>
                     <div>
-                        <Link :href="`/users/${user.id}`" class="block text-lg font-semibold hover:text-blue-500">
+                        <div class="block text-lg font-semibold group-hover:text-blue-500">
                             {{ user.name }}
-                        </Link>
+                        </div>
                         <span class="text-gray-600">{{ user.email }}</span>
                     </div>
-                </div>
+                </Link>
             </div>
 
             <Pagination
