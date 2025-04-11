@@ -4,6 +4,10 @@ use App\Models\User;
 
 uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
 
+beforeEach(function () {
+    Artisan::call('db:seed', ['--class' => 'OAuthStatusSeeder']);
+});
+
 test('login screen can be rendered', function () {
     $response = $this->get('/login');
 
