@@ -12,6 +12,7 @@ import { LoaderCircle } from 'lucide-vue-next';
 defineProps<{
     status?: string;
     canResetPassword: boolean;
+    oauthEnabled: boolean;
 }>();
 
 const form = useForm({
@@ -64,7 +65,7 @@ const submit = () => {
                     Log in
                 </Button>
 
-                <Button variant="secondary" as-child>
+                <Button v-if="oauthEnabled" variant="secondary" as-child>
                     <a :href="route('login.authentik')"> Login with Authentik</a>
                 </Button>
             </div>
