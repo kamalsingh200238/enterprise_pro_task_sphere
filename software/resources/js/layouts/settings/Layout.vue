@@ -26,6 +26,11 @@ const sidebarNavItems: NavItem[] = [
         href: '/settings/appearance',
         isActive: true,
     },
+    {
+        title: 'OAuth Settings',
+        href: '/settings/oauth',
+        isActive: user.value.role === 'admin',
+    },
 ];
 </script>
 

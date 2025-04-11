@@ -36,5 +36,11 @@ class AppServiceProvider extends ServiceProvider
         Gate::define('export-logs', function (User $user) {
             return $user->hasRole([UserRole::Admin, UserRole::Supervisor]); // same check for export permission
         });
+
+        // Register the OAuth settings management gate
+        Gate::define('manage-oauth-settings', function (User $user) {
+            return $user->hasRole(UserRole::Admin); // Only admins can manage OAuth settings
+        });
+
     }
 }
