@@ -162,6 +162,7 @@ class SubTaskController extends Controller
                 'edit' => auth()->user()->can('edit', $subTask),
                 'updateStatus' => auth()->user()->can('updateStatus', $subTask),
                 'updateStatusToDone' => auth()->user()->can('updateStatusToDone', SubTask::class),
+                'comment' => auth()->user()->can('createComment', $subTask),
                 'deleteComment' => auth()->user()->can('delete', Comment::class),
             ],
             'sub-task' => $subTask,
