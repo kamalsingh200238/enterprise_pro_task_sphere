@@ -25,7 +25,7 @@ import {
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { getInitials } from '@/composables/useInitials';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { PaginatedData } from '@/types';
+import { BreadcrumbItem, PaginatedData } from '@/types';
 import { Head, router } from '@inertiajs/vue3';
 import { format, parseISO } from 'date-fns';
 import { Bell } from 'lucide-vue-next';

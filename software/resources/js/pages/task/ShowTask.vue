@@ -39,6 +39,7 @@ interface Props {
         edit: boolean;
         updateStatus: boolean;
         updateStatusToDone: boolean;
+        deleteTask: boolean;
         deleteComment: boolean;
         comment: boolean;
     };
@@ -144,7 +145,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                     <Button v-if="isEditMode" variant="outline" @click="isEditMode = false"> Cancel </Button>
 
                     <!-- Delete Task Alert Dialog (visible when not in edit mode and user can delete) -->
-                    <AlertDialog v-if="!isEditMode && can.edit">
+                    <AlertDialog v-if="!isEditMode && can.deleteTask">
                         <AlertDialogTrigger as-child>
                             <Button variant="destructive">Delete Task</Button>
                         </AlertDialogTrigger>

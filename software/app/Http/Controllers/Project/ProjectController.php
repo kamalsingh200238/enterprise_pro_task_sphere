@@ -198,6 +198,7 @@ class ProjectController extends Controller
                 'edit' => auth()->user()->can('edit', $project),
                 'updateStatus' => auth()->user()->can('updateStatus', $project),
                 'updateStatusToDone' => auth()->user()->can('updateStatusToDone', Project::class),
+                'deleteProject' => auth()->user()->can('delete', Project::class),
                 'comment' => auth()->user()->can('createComment', $project),
                 'deleteComment' => auth()->user()->can('delete', Comment::class),
             ],

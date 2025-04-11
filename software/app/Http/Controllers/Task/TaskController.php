@@ -182,6 +182,7 @@ class TaskController extends Controller
                 'edit' => auth()->user()->can('edit', $task),
                 'updateStatus' => auth()->user()->can('updateStatus', $task),
                 'updateStatusToDone' => auth()->user()->can('updateStatusToDone', Task::class),
+                'deleteTask' => auth()->user()->can('delete', Task::class),
                 'comment' => auth()->user()->can('createComment', $task),
                 'deleteComment' => auth()->user()->can('delete', Comment::class),
             ],
