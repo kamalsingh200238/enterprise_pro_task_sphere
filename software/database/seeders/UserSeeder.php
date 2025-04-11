@@ -17,7 +17,7 @@ class UserSeeder extends Seeder
         // create admins
         $admins = [
             'Admin',
-            'Kamal Singh',
+            // 'Kamal Singh',
         ];
         foreach ($admins as $admin) {
             User::factory()->admin()->create([
@@ -27,32 +27,32 @@ class UserSeeder extends Seeder
         }
 
         // Create supervisors
-        $supervisors = [
-            'Oshan Jain',
-            'Md Fahim',
-            'Daniel Amadike',
-            'Maham Mahmood',
-            'Sabrina Mei',
-            'Suhaana Hussain',
-            'Supervisor',
-        ];
-        foreach ($supervisors as $supervisor) {
-            User::factory()->supervisor()->create([
-                'name' => $supervisor,
-                'email' => strtolower(str_replace(' ', '.', $supervisor)).'@example.com',
-            ]);
-        }
+        // $supervisors = [
+        //     'Oshan Jain',
+        //     'Md Fahim',
+        //     'Daniel Amadike',
+        //     'Maham Mahmood',
+        //     'Sabrina Mei',
+        //     'Suhaana Hussain',
+        //     'Supervisor',
+        // ];
+        // foreach ($supervisors as $supervisor) {
+        //     User::factory()->supervisor()->create([
+        //         'name' => $supervisor,
+        //         'email' => strtolower(str_replace(' ', '.', $supervisor)).'@example.com',
+        //     ]);
+        // }
 
         // create staff members
-        $staffs = [
-            'Staff',
-        ];
-        foreach ($staffs as $staff) {
-            User::factory()->create([
-                'name' => $staff,
-                'email' => strtolower(str_replace(' ', '.', $staff)).'@example.com',
-            ]);
-        }
-        User::factory(10)->create();
+        // $staffs = [
+        //     'Staff',
+        // ];
+        // foreach ($staffs as $staff) {
+        //     User::factory()->create([
+        //         'name' => $staff,
+        //         'email' => strtolower(str_replace(' ', '.', $staff)).'@example.com',
+        //     ]);
+        // }
+        // User::factory(10)->create();
     }
 }
