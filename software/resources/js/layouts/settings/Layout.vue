@@ -12,26 +12,32 @@ const currentPath = page.props.ziggy?.location ? new URL(page.props.ziggy.locati
 
 const sidebarNavItems: NavItem[] = [
     {
-        title: 'Profile',
-        href: '/settings/profile',
-        isActive: true,
-    },
-    {
-        title: 'Password',
-        href: '/settings/password',
-        isActive: !user.value.uses_oauth,
-    },
-    {
         title: 'Appearance',
         href: '/settings/appearance',
         isActive: true,
     },
     {
-        title: 'OAuth Settings',
-        href: '/settings/oauth',
-        isActive: user.value.role === 'admin',
+        title: 'Profile',
+        href: '/settings/profile',
+        isActive: true,
     },
 ];
+
+if (!user.value.uses_oauth) {
+    sidebarNavItems.push({
+        title: 'Password',
+        href: '/settings/password',
+        isActive: true,
+    });
+}
+
+if (user.value.role === 'admin') {
+    sidebarNavItems.push({
+        title: 'OAuth Settings',
+        href: '/settings/oauth',
+        isActive: true,
+    });
+}
 </script>
 
 <template>
