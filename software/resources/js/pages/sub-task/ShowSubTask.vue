@@ -126,7 +126,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 </script>
 
 <template>
-    <Head :title="subTask.name" />
+    <Head title="Sub-Task Details" />
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="container mx-auto px-4 py-6">
             <div class="mb-6 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">

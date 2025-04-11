@@ -69,7 +69,7 @@ watch(searchQuery, updateSearch);
 // breadcrumb for navigation at top of the page
 const breadcrumbs: BreadcrumbItem[] = [
     {
-        title: 'See All Tasks',
+        title: 'All Tasks',
         href: '/tasks',
     },
 ];

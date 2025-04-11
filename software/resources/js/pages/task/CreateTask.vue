@@ -13,7 +13,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import ViewerSelector from '@/components/ViewerSelector.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { Priority, Project, Status, User } from '@/types';
+import { BreadcrumbItem, Priority, Project, Status, User } from '@/types';
 import { Head, useForm } from '@inertiajs/vue3';
 
 // props for the page
@@ -72,6 +72,14 @@ const submit = () => {
         },
     });
 };
+
+// breadcrumb for navigation
+const breadcrumbs: BreadcrumbItem[] = [
+    {
+        title: 'Create Task',
+        href: '/tasks/new',
+    },
+];
 </script>
 
 <template>
@@ -79,7 +87,7 @@ const submit = () => {
     <Head title="Create New Task" />
 
     <!-- app layout wrapper -->
-    <AppLayout>
+    <AppLayout :breadcrumbs="breadcrumbs">
         <div class="container mx-auto px-4 py-6">
             <!-- header section with page title and submit button -->
             <div class="mb-6 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">

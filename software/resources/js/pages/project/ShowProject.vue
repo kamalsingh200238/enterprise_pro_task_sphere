@@ -118,7 +118,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 </script>
 
 <template>
-    <Head :title="project.name" />
+    <Head title="Project Details" />
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="container mx-auto px-4 py-6">
             <div class="mb-6 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
@@ -318,7 +318,7 @@ const breadcrumbs: BreadcrumbItem[] = [
             <div class="mt-6 w-full rounded-md border shadow-sm">
                 <div class="p-6">
                     <!-- Header for Project Tasks -->
-                    <h2 class="mb-4 text-xl font-semibold">Project Tasks</h2>
+                    <h2 class="mb-4 text-xl font-semibold">Tasks</h2>
 
                     <!-- Display message if no tasks are present -->
                     <div v-if="!project.tasks?.length" class="text-sm text-muted-foreground">No tasks yet.</div>

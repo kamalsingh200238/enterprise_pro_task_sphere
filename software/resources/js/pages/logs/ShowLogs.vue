@@ -107,11 +107,19 @@ const exportLogsPage = () => {
         '_blank',
     );
 };
+
+// breadcrumb trail for navigation
+const breadcrumbs: BreadcrumbItem[] = [
+    {
+        title: 'Logs',
+        href: '/logs',
+    },
+];
 </script>
 
 <template>
     <Head title="Activity Logs" />
-    <AppLayout>
+    <AppLayout :breadcrumbs="breadcrumbs">
         <div class="container mx-auto space-y-6 px-4 py-6">
             <div class="flex items-center justify-between">
                 <div class="flex gap-5">
