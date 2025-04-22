@@ -237,7 +237,7 @@ class SubTaskController extends Controller
         }
 
         if ($changingToReview) {
-            $user = User::find($subTask->supervisor_id)->first();
+            $user = User::find($subTask->supervisor_id);
             Mail::to($user)->queue(new SubTaskInReview($subTask, $user));
         }
 
@@ -279,7 +279,7 @@ class SubTaskController extends Controller
         ]);
 
         if ($validated['status_id'] === $inReviewStatusId) {
-            $user = User::find($subTask->supervisor_id)->first();
+            $user = User::find($subTask->supervisor_id);
             Mail::to($user)->queue(new SubTaskInReview($subTask, $user));
         }
 

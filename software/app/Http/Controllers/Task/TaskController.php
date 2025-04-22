@@ -257,7 +257,7 @@ class TaskController extends Controller
         }
 
         if ($changingToReview) {
-            $user = User::find($task->supervisor_id)->first();
+            $user = User::find($task->supervisor_id);
             Mail::to($user)->queue(new TaskInReview($task, $user));
         }
 
@@ -294,7 +294,7 @@ class TaskController extends Controller
         ]);
 
         if ($validated['status_id'] === $inReviewStatusId) {
-            $user = User::find($task->supervisor_id)->first();
+            $user = User::find($task->supervisor_id);
             Mail::to($user)->queue(new TaskInReview($task, $user));
         }
 

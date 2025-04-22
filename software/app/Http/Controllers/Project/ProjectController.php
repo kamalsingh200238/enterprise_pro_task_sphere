@@ -273,7 +273,7 @@ class ProjectController extends Controller
         }
 
         if ($changingToReview) {
-            $user = User::find($project->supervisor_id)->first();
+            $user = User::find($project->supervisor_id);
             Mail::to($user)->queue(new ProjectInReview($project, $user));
         }
 
@@ -315,7 +315,7 @@ class ProjectController extends Controller
         ]);
 
         if ($validated['status_id'] === $inReviewStatusId) {
-            $user = User::find($project->supervisor_id)->first();
+            $user = User::find($project->supervisor_id);
             Mail::to($user)->queue(new ProjectInReview($project, $user));
         }
 
